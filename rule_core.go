@@ -3,6 +3,7 @@ package go_rule_engine
 import (
 	"encoding/json"
 	"strings"
+	"reflect"
 )
 
 func NewRulesWithJson(jsonStr []byte) (*Rules, error) {
@@ -11,13 +12,64 @@ func NewRulesWithJson(jsonStr []byte) (*Rules, error) {
 	if err != nil {
 		return nil, err
 	}
+	// give rule an id
+	var maxId = 1
+	for _, rule := range rules {
+		if rule.Id > maxId {
+			maxId = rule.Id
+		}
+	}
+	for index := range rules {
+		if rules[index].Id == 0 {
+			rules[index].Id = maxId
+			maxId ++
+		}
+	}
 	return &Rules{
 		Rules: rules,
 	}, nil
 }
 
-func (r *Rules) Fit(o map[string]interface{}) {
+func (rs *Rules) Fit(o map[string]interface{}) bool {
+	var results = make(map[int]bool)
+	var hasLogic = false
+	for _, rule := range rs.Rules {
+		v := pluck(rule.Key, o)
+		typeV := reflect.TypeOf(v)
+		typeR := reflect.TypeOf(rule.Val)
+		if !typeV.Comparable() || !typeR.Comparable() {
+			return false
+		}
+		// seek logic
+		if rule.Logic != "" {
+			hasLogic = true
+		}
+		flag := rule.Fit(v)
+		results[rule.Id] = flag
+	}
 
+	// compute result by considering logic
+	var answer = true
+	if !hasLogic {
+		for _, flag := range results {
+			answer = flag && answer
+			if !answer {
+				return false
+			}
+		}
+	}
+
+	return answer
+}
+
+func (r *Rule) Fit(actual interface{}) bool {
+	op := r.Op
+	expect := r.Val
+	switch op {
+	case "=":
+		return expect == actual
+	}
+	return false
 }
 
 func pluck(key string, o map[string]interface{}) interface{} {
