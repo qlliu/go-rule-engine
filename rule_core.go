@@ -71,28 +71,77 @@ func (r *Rule) Fit(v interface{}) bool {
 	// index-0 actual, index-1 expect
 	var pairStr = make([]string, 2)
 	var pairNum = make([]float64, 2)
+	var isStr, isNum bool
 	pairStr[0], ok = v.(string)
 	if !ok {
 		pairNum[0] = formatNumber(v)
+		isStr = false
+		isNum = true
+	} else {
+		isStr = true
+		isNum = false
 	}
 	pairStr[1], ok = r.Val.(string)
 	if !ok {
 		pairNum[1] = formatNumber(r.Val)
+		isStr = false
+	} else {
+		isNum = false
+	}
+	// 判断是否有类型不一致情况
+	if !isStr && !isNum {
+		return false
 	}
 
 	switch op {
 	case "=", "eq":
-		return pairNum[0] == pairNum[1] || pairStr[0] == pairStr[1]
+		if isNum {
+			return pairNum[0] == pairNum[1]
+		}
+		if isStr {
+			return pairStr[0] == pairStr[1]
+		}
+		return false
 	case ">", "gt":
-		return pairNum[0] > pairNum[1] || pairStr[0] > pairStr[1]
+		if isNum {
+			return pairNum[0] > pairNum[1]
+		}
+		if isStr {
+			return pairStr[0] > pairStr[1]
+		}
+		return false
 	case "<", "lt":
-		return pairNum[0] < pairNum[1] || pairStr[0] < pairStr[1]
+		if isNum {
+			return pairNum[0] < pairNum[1]
+		}
+		if isStr {
+			return pairStr[0] < pairStr[1]
+		}
+		return false
 	case ">=", "gte":
-		return pairNum[0] >= pairNum[1] || pairStr[0] >= pairStr[1]
+		if isNum {
+			return pairNum[0] >= pairNum[1]
+		}
+		if isStr {
+			return pairStr[0] >= pairStr[1]
+		}
+		return false
 	case "<=", "lte":
-		return pairNum[0] <= pairNum[1] || pairStr[0] <= pairStr[1]
+		if isNum {
+			return pairNum[0] <= pairNum[1]
+		}
+		if isStr {
+			return pairStr[0] <= pairStr[1]
+		}
+		return false
 	case "!=", "neq":
-		return pairNum[0] != pairNum[1] || pairStr[0] != pairStr[1]
+		if isNum {
+			return pairNum[0] != pairNum[1]
+		}
+		if isStr {
+			return pairStr[0] != pairStr[1]
+		}
+		return false
 	case "@", "contain":
 		return checkRegex(pairStr[1], pairStr[0])
 	case "!@", "ncontain":
