@@ -31,7 +31,7 @@ func TestRule_Fit(t *testing.T) {
 
 func TestRules_Fit(t *testing.T) {
 	jsonStr := []byte(`[
-	{"op": "=", "key": "status", "val": "abc"},
+	{"op": "@", "key": "status", "val": "abcd"},
 	{"op": "=", "key": "name", "val": "peter", "id": 15}
 	]`)
 	rules, err := NewRulesWithJson(jsonStr)

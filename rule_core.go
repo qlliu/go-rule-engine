@@ -22,8 +22,8 @@ func NewRulesWithJson(jsonStr []byte) (*Rules, error) {
 	}
 	for index := range rules {
 		if rules[index].Id == 0 {
-			rules[index].Id = maxId
 			maxId++
+			rules[index].Id = maxId
 		}
 	}
 	return &Rules{
@@ -88,7 +88,7 @@ func (r *Rule) Fit(v interface{}) bool {
 	} else {
 		isNum = false
 	}
-	// 判断是否有类型不一致情况
+	// if types different
 	if !isStr && !isNum {
 		return false
 	}
