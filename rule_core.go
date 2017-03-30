@@ -62,12 +62,25 @@ func (rs *Rules) Fit(o map[string]interface{}) bool {
 	return answer
 }
 
-func (r *Rule) Fit(actual interface{}) bool {
+func (r *Rule) Fit(v interface{}) bool {
 	op := r.Op
-	expect := r.Val
+	// judge if need convert to uniform type
+	var ok bool
+	// index-0 actual, index-1 expect
+	var pairStr = make([]string, 2)
+	var pairNum = make([]float64, 2)
+	pairStr[0], ok = v.(string)
+	if (!ok) {
+		pairNum[0] = formatNumber(v)
+	}
+	pairStr[1], ok = r.Val.(string)
+	if (!ok) {
+		pairNum[1] = formatNumber(r.Val)
+	}
+
 	switch op {
 	case "=":
-		return expect == actual
+		return pairNum[0] == pairNum[1] || pairStr[0] == pairStr[1]
 	}
 	return false
 }
@@ -89,4 +102,35 @@ func pluck(key string, o map[string]interface{}) interface{} {
 		}
 	}
 	return nil
+}
+
+func formatNumber(v interface{}) float64 {
+	switch t := v.(type) {
+	case uint:
+		return float64(t)
+	case uint8:
+		return float64(t)
+	case uint16:
+		return float64(t)
+	case uint32:
+		return float64(t)
+	case uint64:
+		return float64(t)
+	case int:
+		return float64(t)
+	case int8:
+		return float64(t)
+	case int16:
+		return float64(t)
+	case int32:
+		return float64(t)
+	case int64:
+		return float64(t)
+	case float32:
+		return float64(t)
+	case float64:
+		return float64(t)
+	default:
+		return 0
+	}
 }

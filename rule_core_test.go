@@ -30,13 +30,17 @@ func TestRule_Fit(t *testing.T) {
 }
 
 func TestRules_Fit(t *testing.T) {
-	jsonStr := []byte(`[{"op": "=", "key": "status", "val": "1"}]`)
+	jsonStr := []byte(`
+	[{"op": "=", "key": "status", "val": 1},
+	{"op": "=", "key": "name", "val": "peter"}
+	]
+	`)
 	rules, err := NewRulesWithJson(jsonStr)
 	if err != nil {
 		t.Error(err)
 	}
 
-	obj := map[string]interface{}{"data": map[string]interface{}{"deep": 1}, "name": "peter", "status": "1"}
+	obj := map[string]interface{}{"data": map[string]interface{}{"deep": 1}, "name": "peter", "status": 1}
 	result := rules.Fit(obj)
 	t.Log(result)
 }
