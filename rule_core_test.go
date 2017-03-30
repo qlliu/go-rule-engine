@@ -21,9 +21,9 @@ func TestPluck(t *testing.T) {
 
 func TestRule_Fit(t *testing.T) {
 	rule := &Rule{
-		Op: 	"=",
-		Key: 	"status",
-		Val: 	0,
+		Op:  "=",
+		Key: "status",
+		Val: 0,
 	}
 	result := rule.Fit(0)
 	t.Log(result)
@@ -31,7 +31,7 @@ func TestRule_Fit(t *testing.T) {
 
 func TestRules_Fit(t *testing.T) {
 	jsonStr := []byte(`
-	[{"op": "=", "key": "status", "val": 1},
+	[{"op": "1", "key": "status1", "val": "abc"},
 	{"op": "=", "key": "name", "val": "peter"}
 	]
 	`)
@@ -40,7 +40,7 @@ func TestRules_Fit(t *testing.T) {
 		t.Error(err)
 	}
 
-	obj := map[string]interface{}{"data": map[string]interface{}{"deep": 1}, "name": "peter", "status": 1}
+	obj := map[string]interface{}{"data": map[string]interface{}{"deep": 1}, "name": "peter", "status": "abcde"}
 	result := rules.Fit(obj)
 	t.Log(result)
 }

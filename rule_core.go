@@ -2,8 +2,9 @@ package go_rule_engine
 
 import (
 	"encoding/json"
-	"strings"
 	"reflect"
+	"regexp"
+	"strings"
 )
 
 func NewRulesWithJson(jsonStr []byte) (*Rules, error) {
@@ -22,7 +23,7 @@ func NewRulesWithJson(jsonStr []byte) (*Rules, error) {
 	for index := range rules {
 		if rules[index].Id == 0 {
 			rules[index].Id = maxId
-			maxId ++
+			maxId++
 		}
 	}
 	return &Rules{
@@ -35,10 +36,12 @@ func (rs *Rules) Fit(o map[string]interface{}) bool {
 	var hasLogic = false
 	for _, rule := range rs.Rules {
 		v := pluck(rule.Key, o)
-		typeV := reflect.TypeOf(v)
-		typeR := reflect.TypeOf(rule.Val)
-		if !typeV.Comparable() || !typeR.Comparable() {
-			return false
+		if v != nil && rule.Val != nil {
+			typeV := reflect.TypeOf(v)
+			typeR := reflect.TypeOf(rule.Val)
+			if !typeV.Comparable() || !typeR.Comparable() {
+				return false
+			}
 		}
 		// seek logic
 		if rule.Logic != "" {
@@ -47,7 +50,6 @@ func (rs *Rules) Fit(o map[string]interface{}) bool {
 		flag := rule.Fit(v)
 		results[rule.Id] = flag
 	}
-
 	// compute result by considering logic
 	var answer = true
 	if !hasLogic {
@@ -70,18 +72,41 @@ func (r *Rule) Fit(v interface{}) bool {
 	var pairStr = make([]string, 2)
 	var pairNum = make([]float64, 2)
 	pairStr[0], ok = v.(string)
-	if (!ok) {
+	if !ok {
 		pairNum[0] = formatNumber(v)
 	}
 	pairStr[1], ok = r.Val.(string)
-	if (!ok) {
+	if !ok {
 		pairNum[1] = formatNumber(r.Val)
 	}
 
 	switch op {
-	case "=":
+	case "=", "eq":
 		return pairNum[0] == pairNum[1] || pairStr[0] == pairStr[1]
+	case ">", "gt":
+		return pairNum[0] > pairNum[1] || pairStr[0] > pairStr[1]
+	case "<", "lt":
+		return pairNum[0] < pairNum[1] || pairStr[0] < pairStr[1]
+	case ">=", "gte":
+		return pairNum[0] >= pairNum[1] || pairStr[0] >= pairStr[1]
+	case "<=", "lte":
+		return pairNum[0] <= pairNum[1] || pairStr[0] <= pairStr[1]
+	case "!=", "neq":
+		return pairNum[0] != pairNum[1] || pairStr[0] != pairStr[1]
+	case "@", "contain":
+		return checkRegex(pairStr[1], pairStr[0])
+	case "!@", "ncontain":
+		return !checkRegex(pairStr[1], pairStr[0])
+	case "^$", "regex":
+		return checkRegex(pairStr[1], pairStr[0])
+	case "0", "empty":
+		return v == nil
+	case "1", "nempty":
+		return v != nil
+	default:
+		return false
 	}
+
 	return false
 }
 
@@ -93,7 +118,7 @@ func pluck(key string, o map[string]interface{}) interface{} {
 	var ok bool
 	for index, step := range paths {
 		// last step is object key
-		if index == len(paths) - 1 {
+		if index == len(paths)-1 {
 			return o[step]
 		}
 		// explore deeper
@@ -133,4 +158,12 @@ func formatNumber(v interface{}) float64 {
 	default:
 		return 0
 	}
+}
+
+func checkRegex(pattern, o string) bool {
+	regex, err := regexp.Compile(pattern)
+	if err != nil {
+		return false
+	}
+	return regex.MatchString(o)
 }
