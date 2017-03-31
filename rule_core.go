@@ -46,7 +46,7 @@ func (rs *Rules) Fit(o map[string]interface{}) bool {
 				return false
 			}
 		}
-		flag := rule.Fit(v)
+		flag := rule.fit(v)
 		results[rule.Id] = flag
 	}
 	// compute result by considering logic
@@ -58,7 +58,7 @@ func (rs *Rules) Fit(o map[string]interface{}) bool {
 		}
 		return true
 	} else {
-		answer, err := rs.CalculateExpression(rs.Logic, results)
+		answer, err := rs.calculateExpression(rs.Logic, results)
 		if err != nil {
 			return false
 		}
@@ -66,7 +66,7 @@ func (rs *Rules) Fit(o map[string]interface{}) bool {
 	}
 }
 
-func (r *Rule) Fit(v interface{}) bool {
+func (r *Rule) fit(v interface{}) bool {
 	op := r.Op
 	// judge if need convert to uniform type
 	var ok bool

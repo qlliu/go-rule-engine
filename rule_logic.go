@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-func (*Rules) CalculateExpression(expr string, values map[int]bool) (bool, error) {
+func (*Rules) calculateExpression(expr string, values map[int]bool) (bool, error) {
 	listExpr := strings.Split(expr, " ")
 	stackNum := list.New()
 	stackOp	:= list.New()

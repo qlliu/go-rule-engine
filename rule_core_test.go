@@ -25,7 +25,7 @@ func TestRule_Fit(t *testing.T) {
 		Key: "status",
 		Val: 0,
 	}
-	result := rule.Fit(0)
+	result := rule.fit(0)
 	t.Log(result)
 }
 
@@ -39,7 +39,7 @@ func TestRules_Fit(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	rules.Logic = "( 15 or 13 ) and 17 and 13"
+	rules.Logic = "( 15 or 13 ) and 17 and not 13"
 
 	obj := map[string]interface{}{"data": map[string]interface{}{"deep": 1}, "name": "peter", "status": "abc"}
 	result := rules.Fit(obj)
