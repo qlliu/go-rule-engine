@@ -34,6 +34,9 @@ func NewRulesWithJson(jsonStr []byte) (*Rules, error) {
 func (rs *Rules) Fit(o map[string]interface{}) bool {
 	var results = make(map[int]bool)
 	var hasLogic = false
+	if rs.Logic != "" {
+		hasLogic = true
+	}
 	for _, rule := range rs.Rules {
 		v := pluck(rule.Key, o)
 		if v != nil && rule.Val != nil {
@@ -42,10 +45,6 @@ func (rs *Rules) Fit(o map[string]interface{}) bool {
 			if !typeV.Comparable() || !typeR.Comparable() {
 				return false
 			}
-		}
-		// seek logic
-		if rule.Logic != "" {
-			hasLogic = true
 		}
 		flag := rule.Fit(v)
 		results[rule.Id] = flag
