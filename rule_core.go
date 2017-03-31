@@ -50,17 +50,20 @@ func (rs *Rules) Fit(o map[string]interface{}) bool {
 		results[rule.Id] = flag
 	}
 	// compute result by considering logic
-	var answer = true
 	if !hasLogic {
 		for _, flag := range results {
-			answer = flag && answer
-			if !answer {
+			if !flag {
 				return false
 			}
 		}
+		return true
+	} else {
+		answer, err := rs.CalculateExpression(rs.Logic, results)
+		if err != nil {
+			return false
+		}
+		return answer
 	}
-
-	return answer
 }
 
 func (r *Rule) Fit(v interface{}) bool {

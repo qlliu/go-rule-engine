@@ -31,13 +31,15 @@ func TestRule_Fit(t *testing.T) {
 
 func TestRules_Fit(t *testing.T) {
 	jsonStr := []byte(`[
-	{"op": "@", "key": "status", "val": "abcd"},
-	{"op": "=", "key": "name", "val": "peter", "id": 15}
+	{"op": "@", "key": "status", "val": "abcd", "id": 13},
+	{"op": "=", "key": "name", "val": "peter", "id": 15},
+	{"op": ">=", "key": "data.deep", "val": 1, "id": 17}
 	]`)
 	rules, err := NewRulesWithJson(jsonStr)
 	if err != nil {
 		t.Error(err)
 	}
+	rules.Logic = "( 15 or 13 ) and 17 and 13"
 
 	obj := map[string]interface{}{"data": map[string]interface{}{"deep": 1}, "name": "peter", "status": "abc"}
 	result := rules.Fit(obj)
