@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"github.com/fatih/structs"
 )
 
 func NewRulesWithJson(jsonStr []byte) (*Rules, error) {
@@ -31,7 +32,12 @@ func NewRulesWithJson(jsonStr []byte) (*Rules, error) {
 	}, nil
 }
 
-func (rs *Rules) Fit(o map[string]interface{}) bool {
+func (rs *Rules) Fit(o interface{}) bool {
+	m := structs.Map(o)
+	return rs.FitWithMap(m)
+}
+
+func (rs *Rules) FitWithMap(o map[string]interface{}) bool {
 	var results = make(map[int]bool)
 	var hasLogic = false
 	if rs.Logic != "" {

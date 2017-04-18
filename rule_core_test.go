@@ -42,6 +42,36 @@ func TestRules_Fit(t *testing.T) {
 	rules.Logic = "( 15 or 13 ) and 17 and not 13"
 
 	obj := map[string]interface{}{"data": map[string]interface{}{"deep": 1}, "name": "peter", "status": "abc"}
+	result := rules.FitWithMap(obj)
+	t.Log(result)
+}
+
+func TestRules_Fit2(t *testing.T) {
+	jsonStr := []byte(`[
+	{"op": "@", "key": "Status", "val": "abcd", "id": 13},
+	{"op": "=", "key": "Name", "val": "peter", "id": 15},
+	{"op": ">=", "key": "Data.Deep", "val": 1, "id": 17}
+	]`)
+	rules, err := NewRulesWithJson(jsonStr)
+	if err != nil {
+		t.Error(err)
+	}
+	rules.Logic = "( 15 or 13 ) and 17 and not 13"
+	type B struct {
+		Deep int
+	}
+	type A struct {
+		Data B
+		Name string
+		Status string
+	}
+	obj := A {
+		Data: B{
+			Deep: 1,
+		},
+		Name: "peter",
+		Status: "abc",
+	}
 	result := rules.Fit(obj)
 	t.Log(result)
 }
