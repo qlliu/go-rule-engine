@@ -31,9 +31,9 @@ func TestRule_Fit(t *testing.T) {
 
 func TestRules_Fit(t *testing.T) {
 	jsonStr := []byte(`[
-	{"op": "@", "key": "status", "val": "abcd", "id": 13},
+	{"op": "@", "key": "status", "val": "abcd", "id": 13, "msg": "状态不对"},
 	{"op": "=", "key": "name", "val": "peter", "id": 15},
-	{"op": ">=", "key": "data.deep", "val": 1, "id": 17}
+	{"op": ">=", "key": "data.deep", "val": 1, "id": 17, "msg": "deep 数值不对"}
 	]`)
 	rules, err := NewRulesWithJson(jsonStr)
 	if err != nil {
@@ -42,8 +42,9 @@ func TestRules_Fit(t *testing.T) {
 	rules.Logic = "( 15 or 13 ) and 17 and not 13"
 
 	obj := map[string]interface{}{"data": map[string]interface{}{"deep": 1}, "name": "peter", "status": "abc"}
-	result := rules.FitWithMap(obj)
+	result, msg := rules.FitWithMap(obj)
 	t.Log(result)
+	t.Log(msg)
 }
 
 func TestRules_Fit2(t *testing.T) {
@@ -72,6 +73,6 @@ func TestRules_Fit2(t *testing.T) {
 		Name: "peter",
 		Status: "abc",
 	}
-	result := rules.Fit(obj)
+	result, _ := rules.Fit(obj)
 	t.Log(result)
 }

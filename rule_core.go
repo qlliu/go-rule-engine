@@ -36,13 +36,14 @@ func NewRulesWithArray(rules []*Rule) *Rules {
 	}
 }
 
-func (rs *Rules) Fit(o interface{}) bool {
+func (rs *Rules) Fit(o interface{}) (bool, map[int]string) {
 	m := structs.Map(o)
 	return rs.FitWithMap(m)
 }
 
-func (rs *Rules) FitWithMap(o map[string]interface{}) bool {
+func (rs *Rules) FitWithMap(o map[string]interface{}) (bool, map[int]string) {
 	var results = make(map[int]bool)
+	var tips = make(map[int]string)
 	var hasLogic = false
 	if rs.Logic != "" {
 		hasLogic = true
@@ -53,26 +54,30 @@ func (rs *Rules) FitWithMap(o map[string]interface{}) bool {
 			typeV := reflect.TypeOf(v)
 			typeR := reflect.TypeOf(rule.Val)
 			if !typeV.Comparable() || !typeR.Comparable() {
-				return false
+				return false, nil
 			}
 		}
 		flag := rule.fit(v)
 		results[rule.Id] = flag
+		if (!flag) {
+			// unfit, record msg
+			tips[rule.Id] = rule.Msg
+		}
 	}
 	// compute result by considering logic
 	if !hasLogic {
 		for _, flag := range results {
 			if !flag {
-				return false
+				return false, tips
 			}
 		}
-		return true
+		return true, nil
 	} else {
 		answer, err := rs.calculateExpression(rs.Logic, results)
 		if err != nil {
-			return false
+			return false, nil
 		}
-		return answer
+		return answer, tips
 	}
 }
 
