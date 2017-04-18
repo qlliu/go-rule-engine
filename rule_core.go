@@ -14,6 +14,10 @@ func NewRulesWithJson(jsonStr []byte) (*Rules, error) {
 	if err != nil {
 		return nil, err
 	}
+	return NewRulesWithArray(rules), nil
+}
+
+func NewRulesWithArray(rules []*Rule) *Rules {
 	// give rule an id
 	var maxId = 1
 	for _, rule := range rules {
@@ -29,7 +33,7 @@ func NewRulesWithJson(jsonStr []byte) (*Rules, error) {
 	}
 	return &Rules{
 		Rules: rules,
-	}, nil
+	}
 }
 
 func (rs *Rules) Fit(o interface{}) bool {
