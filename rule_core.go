@@ -8,6 +8,23 @@ import (
 	"github.com/fatih/structs"
 )
 
+func NewRulesWithJsonAndLogic(jsonStr []byte, logic string) (*Rules, error) {
+	if logic == "" {
+		// empty logic
+		return NewRulesWithJson(jsonStr)
+	}
+
+	formatLogic := formatLogicExpression(logic)
+
+	rules, err := NewRulesWithJson(jsonStr)
+	if err != nil {
+		return nil, err
+	}
+	rules.Logic = formatLogic
+
+	return rules, nil
+}
+
 func NewRulesWithJson(jsonStr []byte) (*Rules, error) {
 	var rules []*Rule
 	err := json.Unmarshal(jsonStr, &rules)
@@ -232,4 +249,50 @@ func checkRegex(pattern, o string) bool {
 		return false
 	}
 	return regex.MatchString(o)
+}
+
+func formatLogicExpression(strRawExpr string) string {
+	flagPre := ""
+	flagNow := ""
+	runesOrigin := []rune(strings.ToLower(strRawExpr))
+	runesPretty := make([]rune, 0)
+	for _, c := range runesOrigin {
+		if c <= []rune("9")[0] && c >= []rune("0")[0] {
+			flagNow = "num"
+		} else if c <= []rune("z")[0] && c >= []rune("a")[0] {
+			flagNow = "char"
+		} else if c == []rune("(")[0] || c == []rune(")")[0] {
+			flagNow = "bracket"
+		} else {
+			flagNow = flagPre
+		}
+		if flagNow != flagPre {
+			// should insert space here
+			runesPretty = append(runesPretty, []rune(" ")[0])
+		}
+		runesPretty = append(runesPretty, c)
+		flagPre = flagNow
+	}
+	// remove redundant space
+	flagPre = "notSpace"
+	flagNow = ""
+	runesTrim := make([]rune, 0)
+	for _, c := range runesPretty {
+		if c == []rune(" ")[0] {
+			flagNow = "space"
+		} else {
+			flagNow = "notSpace"
+		}
+		if flagNow == "space" && flagPre == "space" {
+			// continuous space
+			continue
+		} else {
+			runesTrim = append(runesTrim, c)
+		}
+		flagPre = flagNow
+	}
+	strPrettyTrim := string(runesTrim)
+	strPrettyTrim = strings.Trim(strPrettyTrim, " ")
+
+	return strPrettyTrim
 }
