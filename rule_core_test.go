@@ -113,7 +113,7 @@ func TestNewRulesWithJsonAndLogic3(t *testing.T) {
 	{"op": "=", "key": "Name", "val": "peter", "id": 15},
 	{"op": ">=", "key": "Data.Deep", "val": 1, "id": 17}
 	]`)
-	logic := "     13     and (15     )"
+	logic := "     13     and  (15or13    )"
 	rules, err := NewRulesWithJsonAndLogic(jsonStr, logic)
 	if err != nil {
 		t.Error(err)
