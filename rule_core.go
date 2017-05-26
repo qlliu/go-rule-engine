@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 	"github.com/fatih/structs"
+	"errors"
 )
 
 func NewRulesWithJsonAndLogic(jsonStr []byte, logic string) (*Rules, error) {
@@ -15,6 +16,12 @@ func NewRulesWithJsonAndLogic(jsonStr []byte, logic string) (*Rules, error) {
 	}
 
 	formatLogic := formatLogicExpression(logic)
+	// validate the formatLogic string
+	// 1. only contain legal symbol
+	isValidSymbol := isFormatLogicExpressionAllValidSymbol(formatLogic)
+	if (!isValidSymbol) {
+		return nil, errors.New("invalid logic expression")
+	}
 
 	rules, err := NewRulesWithJson(jsonStr)
 	if err != nil {
@@ -295,4 +302,36 @@ func formatLogicExpression(strRawExpr string) string {
 	strPrettyTrim = strings.Trim(strPrettyTrim, " ")
 
 	return strPrettyTrim
+}
+
+func isFormatLogicExpressionAllValidSymbol(strFormatLogic string) bool {
+	listSymbol := strings.Split(strFormatLogic, " ")
+	for _, symbol := range listSymbol {
+		flag := false
+		pattern := "^\\d*$"
+		regex, err := regexp.Compile(pattern)
+		if err != nil {
+			return false
+		}
+		if regex.MatchString(symbol) {
+			// is number ok
+			continue
+		}
+		for _, op := range VALID_OPERATORS {
+			if op == symbol {
+				// is operator ok
+				flag = true
+			}
+		}
+		for _, v := range []string{"(", ")"} {
+			if v == symbol {
+				// is bracket ok
+				flag = true
+			}
+		}
+		if (!flag) {
+			return false
+		}
+	}
+	return true
 }
