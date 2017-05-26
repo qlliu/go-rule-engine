@@ -7,6 +7,7 @@ import (
 	"strings"
 	"github.com/fatih/structs"
 	"errors"
+	"strconv"
 )
 
 func NewRulesWithJsonAndLogic(jsonStr []byte, logic string) (*Rules, error) {
@@ -20,13 +21,19 @@ func NewRulesWithJsonAndLogic(jsonStr []byte, logic string) (*Rules, error) {
 	// 1. only contain legal symbol
 	isValidSymbol := isFormatLogicExpressionAllValidSymbol(formatLogic)
 	if (!isValidSymbol) {
-		return nil, errors.New("invalid logic expression")
+		return nil, errors.New("invalid logic expression: invalid symbol")
 	}
 
 	rules, err := NewRulesWithJson(jsonStr)
 	if err != nil {
 		return nil, err
 	}
+	// 2. all ids in logic string must be in rules ids
+	isValidIds := isFormatLogicExpressionAllIdsExist(formatLogic, rules)
+	if (!isValidIds) {
+		return nil, errors.New("invalid logic expression: invalid id")
+	}
+
 	rules.Logic = formatLogic
 
 	return rules, nil
@@ -334,4 +341,28 @@ func isFormatLogicExpressionAllValidSymbol(strFormatLogic string) bool {
 		}
 	}
 	return true
+}
+
+func isFormatLogicExpressionAllIdsExist(strFormatLogic string, rules *Rules) bool {
+	mapExistIds := make(map[string]bool)
+	for _, eachRule := range rules.Rules {
+		mapExistIds[strconv.Itoa(eachRule.Id)] = true
+	}
+	listSymbol := strings.Split(strFormatLogic, " ")
+	pattern := "^\\d*$"
+	regex, err := regexp.Compile(pattern)
+	if err != nil {
+		return false
+	}
+	for _, symbol := range listSymbol {
+		if regex.MatchString(symbol) {
+			// is id, check it
+			if _, ok := mapExistIds[symbol]; ok {
+				continue
+			} else {
+				return false;
+			}
+		}
+	}
+	return true;
 }
