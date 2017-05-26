@@ -8,6 +8,7 @@ import (
 	"github.com/fatih/structs"
 	"errors"
 	"strconv"
+	"math/rand"
 )
 
 func NewRulesWithJsonAndLogic(jsonStr []byte, logic string) (*Rules, error) {
@@ -24,15 +25,23 @@ func NewRulesWithJsonAndLogic(jsonStr []byte, logic string) (*Rules, error) {
 		return nil, errors.New("invalid logic expression: invalid symbol")
 	}
 
+	// 2. check logic expression by trying to  calculate result with random bool
+	err := tryToCalculateResultByFormatLogicExpressionWithRandomProbe(formatLogic)
+	if err != nil {
+		return nil, errors.New("invalid logic expression: can not calculate")
+	}
+
 	rules, err := NewRulesWithJson(jsonStr)
 	if err != nil {
 		return nil, err
 	}
-	// 2. all ids in logic string must be in rules ids
+	// 3. all ids in logic string must be in rules ids
 	isValidIds := isFormatLogicExpressionAllIdsExist(formatLogic, rules)
 	if (!isValidIds) {
 		return nil, errors.New("invalid logic expression: invalid id")
 	}
+
+
 
 	rules.Logic = formatLogic
 
@@ -365,4 +374,33 @@ func isFormatLogicExpressionAllIdsExist(strFormatLogic string, rules *Rules) boo
 		}
 	}
 	return true;
+}
+
+func tryToCalculateResultByFormatLogicExpressionWithRandomProbe(strFormatLogic string) error {
+	listSymbol := strings.Split(strFormatLogic, " ")
+	pattern := "^\\d*$"
+	regex, err := regexp.Compile(pattern)
+	if err != nil {
+		return err
+	}
+	// random probe
+	mapProbe := make(map[int]bool)
+	for _, symbol := range listSymbol {
+		if regex.MatchString(symbol) {
+			id, err := strconv.Atoi(symbol)
+			if err != nil {
+				return err
+			}
+			randomInt := rand.Intn(10)
+			randomBool := randomInt < 5
+			mapProbe[id] = randomBool
+		}
+	}
+	// calculate
+	r := &Rules{}
+	_, err = r.calculateExpression(strFormatLogic, mapProbe)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -106,3 +106,18 @@ func TestNewRulesWithJsonAndLogic2(t *testing.T) {
 	t.Log(rules.Rules[0])
 	t.Log(rules.Logic)
 }
+
+func TestNewRulesWithJsonAndLogic3(t *testing.T) {
+	jsonStr := []byte(`[
+	{"op": "@", "key": "Status", "val": "abcd", "id": 13},
+	{"op": "=", "key": "Name", "val": "peter", "id": 15},
+	{"op": ">=", "key": "Data.Deep", "val": 1, "id": 17}
+	]`)
+	logic := "     13     and (15     )"
+	rules, err := NewRulesWithJsonAndLogic(jsonStr, logic)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(rules.Rules[0])
+	t.Log(rules.Logic)
+}
