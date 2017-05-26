@@ -11,12 +11,7 @@ import (
 	"math/rand"
 )
 
-func NewRulesWithJsonAndLogic(jsonStr []byte, logic string) (*Rules, error) {
-	if logic == "" {
-		// empty logic
-		return NewRulesWithJson(jsonStr)
-	}
-
+func injectLogic(rules *Rules, logic string) (*Rules, error) {
 	formatLogic := formatLogicExpression(logic)
 	// validate the formatLogic string
 	// 1. only contain legal symbol
@@ -31,21 +26,45 @@ func NewRulesWithJsonAndLogic(jsonStr []byte, logic string) (*Rules, error) {
 		return nil, errors.New("invalid logic expression: can not calculate")
 	}
 
-	rules, err := NewRulesWithJson(jsonStr)
-	if err != nil {
-		return nil, err
-	}
 	// 3. all ids in logic string must be in rules ids
 	isValidIds := isFormatLogicExpressionAllIdsExist(formatLogic, rules)
 	if (!isValidIds) {
 		return nil, errors.New("invalid logic expression: invalid id")
 	}
-
-
-
 	rules.Logic = formatLogic
 
 	return rules, nil
+}
+
+func NewRulesWithJsonAndLogic(jsonStr []byte, logic string) (*Rules, error) {
+	if logic == "" {
+		// empty logic
+		return NewRulesWithJson(jsonStr)
+	}
+	rulesObj, err := NewRulesWithJson(jsonStr)
+	if err != nil {
+		return nil, err
+	}
+	rulesObj, err = injectLogic(rulesObj, logic)
+	if err != nil {
+		return nil, err
+	}
+
+	return rulesObj, nil
+}
+
+func NewRulesWithArrayAndLogic(rules []*Rule, logic string) (*Rules, error) {
+	if logic == "" {
+		// empty logic
+		return NewRulesWithArray(rules), nil
+	}
+	rulesObj := NewRulesWithArray(rules)
+	rulesObj, err := injectLogic(rulesObj, logic)
+	if err != nil {
+		return nil, err
+	}
+
+	return rulesObj, nil
 }
 
 func NewRulesWithJson(jsonStr []byte) (*Rules, error) {
