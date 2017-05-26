@@ -35,7 +35,12 @@ func (*Rules) calculateExpression(expr string, values map[int]bool) (bool, error
 				}
 			}
 			if isOpBiggerInLogic(c, lastOp) || c == "(" {
-				stackOp.PushBack(c)
+				// if ( meet ), should delete (
+				if lastOp == "(" && c == ")" {
+					stackOp.Remove(stackOp.Back())
+				} else {
+					stackOp.PushBack(c)
+				}
 			} else {
 				iterMax := stackOp.Len()
 				for i := 0; i < iterMax; i++ {
@@ -78,6 +83,15 @@ func (*Rules) calculateExpression(expr string, values map[int]bool) (bool, error
 		if stackOp.Back() == nil {
 			break
 		}
+		// judge stackOp char valid: not ( or )
+		if strOp, ok := stackOp.Back().Value.(string); ok {
+			if strOp == "(" || strOp == ")" {
+				return false, errors.New("error expression to calculate: "+expr)
+			}
+		} else {
+			return false, errors.New("error expression to calculate: "+expr)
+		}
+
 		stackNum.PushBack(stackOp.Back().Value)
 		stackOp.Remove(stackOp.Back())
 	}
