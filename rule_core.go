@@ -6,7 +6,66 @@ import (
 	"regexp"
 	"strings"
 	"github.com/fatih/structs"
+	"errors"
+	"strconv"
+	"math/rand"
 )
+
+func injectLogic(rules *Rules, logic string) (*Rules, error) {
+	formatLogic := formatLogicExpression(logic)
+	// validate the formatLogic string
+	// 1. only contain legal symbol
+	isValidSymbol := isFormatLogicExpressionAllValidSymbol(formatLogic)
+	if (!isValidSymbol) {
+		return nil, errors.New("invalid logic expression: invalid symbol")
+	}
+
+	// 2. check logic expression by trying to  calculate result with random bool
+	err := tryToCalculateResultByFormatLogicExpressionWithRandomProbe(formatLogic)
+	if err != nil {
+		return nil, errors.New("invalid logic expression: can not calculate")
+	}
+
+	// 3. all ids in logic string must be in rules ids
+	isValidIds := isFormatLogicExpressionAllIdsExist(formatLogic, rules)
+	if (!isValidIds) {
+		return nil, errors.New("invalid logic expression: invalid id")
+	}
+	rules.Logic = formatLogic
+
+	return rules, nil
+}
+
+func NewRulesWithJsonAndLogic(jsonStr []byte, logic string) (*Rules, error) {
+	if logic == "" {
+		// empty logic
+		return NewRulesWithJson(jsonStr)
+	}
+	rulesObj, err := NewRulesWithJson(jsonStr)
+	if err != nil {
+		return nil, err
+	}
+	rulesObj, err = injectLogic(rulesObj, logic)
+	if err != nil {
+		return nil, err
+	}
+
+	return rulesObj, nil
+}
+
+func NewRulesWithArrayAndLogic(rules []*Rule, logic string) (*Rules, error) {
+	if logic == "" {
+		// empty logic
+		return NewRulesWithArray(rules), nil
+	}
+	rulesObj := NewRulesWithArray(rules)
+	rulesObj, err := injectLogic(rulesObj, logic)
+	if err != nil {
+		return nil, err
+	}
+
+	return rulesObj, nil
+}
 
 func NewRulesWithJson(jsonStr []byte) (*Rules, error) {
 	var rules []*Rule
@@ -232,4 +291,135 @@ func checkRegex(pattern, o string) bool {
 		return false
 	}
 	return regex.MatchString(o)
+}
+
+func formatLogicExpression(strRawExpr string) string {
+	flagPre := ""
+	flagNow := ""
+	runesOrigin := []rune(strings.ToLower(strRawExpr))
+	runesPretty := make([]rune, 0)
+	for _, c := range runesOrigin {
+		if c <= []rune("9")[0] && c >= []rune("0")[0] {
+			flagNow = "num"
+		} else if c <= []rune("z")[0] && c >= []rune("a")[0] {
+			flagNow = "char"
+		} else if c == []rune("(")[0] || c == []rune(")")[0] {
+			flagNow = "bracket"
+		} else {
+			flagNow = flagPre
+		}
+		if flagNow != flagPre {
+			// should insert space here
+			runesPretty = append(runesPretty, []rune(" ")[0])
+		}
+		runesPretty = append(runesPretty, c)
+		flagPre = flagNow
+	}
+	// remove redundant space
+	flagPre = "notSpace"
+	flagNow = ""
+	runesTrim := make([]rune, 0)
+	for _, c := range runesPretty {
+		if c == []rune(" ")[0] {
+			flagNow = "space"
+		} else {
+			flagNow = "notSpace"
+		}
+		if flagNow == "space" && flagPre == "space" {
+			// continuous space
+			continue
+		} else {
+			runesTrim = append(runesTrim, c)
+		}
+		flagPre = flagNow
+	}
+	strPrettyTrim := string(runesTrim)
+	strPrettyTrim = strings.Trim(strPrettyTrim, " ")
+
+	return strPrettyTrim
+}
+
+func isFormatLogicExpressionAllValidSymbol(strFormatLogic string) bool {
+	listSymbol := strings.Split(strFormatLogic, " ")
+	for _, symbol := range listSymbol {
+		flag := false
+		pattern := "^\\d*$"
+		regex, err := regexp.Compile(pattern)
+		if err != nil {
+			return false
+		}
+		if regex.MatchString(symbol) {
+			// is number ok
+			continue
+		}
+		for _, op := range VALID_OPERATORS {
+			if op == symbol {
+				// is operator ok
+				flag = true
+			}
+		}
+		for _, v := range []string{"(", ")"} {
+			if v == symbol {
+				// is bracket ok
+				flag = true
+			}
+		}
+		if (!flag) {
+			return false
+		}
+	}
+	return true
+}
+
+func isFormatLogicExpressionAllIdsExist(strFormatLogic string, rules *Rules) bool {
+	mapExistIds := make(map[string]bool)
+	for _, eachRule := range rules.Rules {
+		mapExistIds[strconv.Itoa(eachRule.Id)] = true
+	}
+	listSymbol := strings.Split(strFormatLogic, " ")
+	pattern := "^\\d*$"
+	regex, err := regexp.Compile(pattern)
+	if err != nil {
+		return false
+	}
+	for _, symbol := range listSymbol {
+		if regex.MatchString(symbol) {
+			// is id, check it
+			if _, ok := mapExistIds[symbol]; ok {
+				continue
+			} else {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+func tryToCalculateResultByFormatLogicExpressionWithRandomProbe(strFormatLogic string) error {
+	listSymbol := strings.Split(strFormatLogic, " ")
+	pattern := "^\\d*$"
+	regex, err := regexp.Compile(pattern)
+	if err != nil {
+		return err
+	}
+	// random probe
+	mapProbe := make(map[int]bool)
+	for _, symbol := range listSymbol {
+		if regex.MatchString(symbol) {
+			id, err := strconv.Atoi(symbol)
+			if err != nil {
+				return err
+			}
+			randomInt := rand.Intn(10)
+			randomBool := randomInt < 5
+			mapProbe[id] = randomBool
+		}
+	}
+	// calculate
+	r := &Rules{}
+	_, err = r.calculateExpression(strFormatLogic, mapProbe)
+	if err != nil {
+		return err
+	}
+	return nil
 }

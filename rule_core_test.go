@@ -76,3 +76,67 @@ func TestRules_Fit2(t *testing.T) {
 	result, _ := rules.Fit(obj)
 	t.Log(result)
 }
+
+func TestNewRulesWithJsonAndLogic(t *testing.T) {
+	jsonStr := []byte(`[
+	{"op": "@", "key": "Status", "val": "abcd", "id": 13},
+	{"op": "=", "key": "Name", "val": "peter", "id": 15},
+	{"op": ">=", "key": "Data.Deep", "val": 1, "id": 17}
+	]`)
+	logic := "     13       and (15     )"
+	rules, err := NewRulesWithJsonAndLogic(jsonStr, logic)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(rules.Rules[0])
+	t.Log(rules.Logic)
+}
+
+func TestNewRulesWithJsonAndLogic2(t *testing.T) {
+	jsonStr := []byte(`[
+	{"op": "@", "key": "Status", "val": "abcd", "id": 13},
+	{"op": "=", "key": "Name", "val": "peter", "id": 15},
+	{"op": ">=", "key": "Data.Deep", "val": 1, "id": 17}
+	]`)
+	logic := "     13    or   and (15     )"
+	rules, err := NewRulesWithJsonAndLogic(jsonStr, logic)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(rules.Rules[0])
+	t.Log(rules.Logic)
+}
+
+func TestNewRulesWithJsonAndLogic3(t *testing.T) {
+	jsonStr := []byte(`[
+	{"op": "@", "key": "Status", "val": "abcd", "id": 13},
+	{"op": "=", "key": "Name", "val": "peter", "id": 15},
+	{"op": ">=", "key": "Data.Deep", "val": 1, "id": 17}
+	]`)
+	logic := "     13     and  (15or13    )"
+	rules, err := NewRulesWithJsonAndLogic(jsonStr, logic)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(rules.Rules[0])
+	t.Log(rules.Logic)
+}
+
+func TestNewRulesWithArrayAndLogic(t *testing.T) {
+	jsonStr := []byte(`[
+	{"op": "@", "key": "Status", "val": "abcd", "id": 13},
+	{"op": "=", "key": "Name", "val": "peter", "id": 15},
+	{"op": ">=", "key": "Data.Deep", "val": 1, "id": 17}
+	]`)
+	logic := "     13     and  (15or13    )"
+	rules, err := NewRulesWithJsonAndLogic(jsonStr, logic)
+	if err != nil {
+		t.Error(err)
+	}
+	rules, err = NewRulesWithArrayAndLogic(rules.Rules, logic)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(rules.Rules[0])
+	t.Log(rules.Logic)
+}

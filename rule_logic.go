@@ -35,7 +35,12 @@ func (*Rules) calculateExpression(expr string, values map[int]bool) (bool, error
 				}
 			}
 			if isOpBiggerInLogic(c, lastOp) || c == "(" {
-				stackOp.PushBack(c)
+				// if ( meet ), should delete (
+				if lastOp == "(" && c == ")" {
+					stackOp.Remove(stackOp.Back())
+				} else {
+					stackOp.PushBack(c)
+				}
 			} else {
 				iterMax := stackOp.Len()
 				for i := 0; i < iterMax; i++ {
@@ -56,6 +61,14 @@ func (*Rules) calculateExpression(expr string, values map[int]bool) (bool, error
 				}
 				if (c == ")") {
 					// delete "("
+					if stackOp.Back() == nil {
+						return false, errors.New("error expression to calculate: "+expr)
+					}
+					if strBracket, ok := stackOp.Back().Value.(string); ok {
+						if strBracket != "(" {
+							return false, errors.New("error expression to calculate: "+expr)
+						}
+					}
 					stackOp.Remove(stackOp.Back())
 				} else {
 					stackOp.PushBack(c)
@@ -70,6 +83,15 @@ func (*Rules) calculateExpression(expr string, values map[int]bool) (bool, error
 		if stackOp.Back() == nil {
 			break
 		}
+		// judge stackOp char valid: not ( or )
+		if strOp, ok := stackOp.Back().Value.(string); ok {
+			if strOp == "(" || strOp == ")" {
+				return false, errors.New("error expression to calculate: "+expr)
+			}
+		} else {
+			return false, errors.New("error expression to calculate: "+expr)
+		}
+
 		stackNum.PushBack(stackOp.Back().Value)
 		stackOp.Remove(stackOp.Back())
 	}
@@ -96,14 +118,20 @@ func (*Rules) calculateExpression(expr string, values map[int]bool) (bool, error
 		} else {
 			// choose operands and operate
 			if numOfOperandInLogic(item) == 2 {
-				operandBRaw := stackOp.Back().Value
-				operandB, ok := operandBRaw.(bool)
+				operandBRaw := stackOp.Back()
+				if operandBRaw == nil {
+					return false, errors.New("error expression to calculate: "+expr)
+				}
+				operandB, ok := operandBRaw.Value.(bool)
 				if !ok {
 					return false, errors.New("error type of operator")
 				}
 				stackOp.Remove(stackOp.Back())
-				operandARaw := stackOp.Back().Value
-				operandA, ok := operandARaw.(bool)
+				operandARaw := stackOp.Back()
+				if operandARaw == nil {
+					return false, errors.New("error expression to calculate: "+expr)
+				}
+				operandA, ok := operandARaw.Value.(bool)
 				if !ok {
 					return false, errors.New("error type of operator")
 				}
@@ -115,8 +143,11 @@ func (*Rules) calculateExpression(expr string, values map[int]bool) (bool, error
 				stackOp.PushBack(computeOutput)
 			}
 			if numOfOperandInLogic(item) == 1 {
-				operandBRaw := stackOp.Back().Value
-				operandB, ok := operandBRaw.(bool)
+				operandBRaw := stackOp.Back()
+				if operandBRaw == nil {
+					return false, errors.New("error expression to calculate: "+expr)
+				}
+				operandB, ok := operandBRaw.Value.(bool)
 				if !ok {
 					return false, errors.New("error type of operator")
 				}
@@ -131,6 +162,9 @@ func (*Rules) calculateExpression(expr string, values map[int]bool) (bool, error
 		stackNum.Remove(stackNum.Front())
 	}
 
+	if stackOp.Back() == nil {
+		return false, errors.New("error expression to calculate: "+expr)
+	}
 	result, ok := stackOp.Back().Value.(bool)
 	if !ok {
 		return false, errors.New("error type in final result")

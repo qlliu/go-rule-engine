@@ -20,3 +20,5 @@ type RulesSet struct {
 	Name     string
 	Msg 	 string
 }
+
+var VALID_OPERATORS  = []string{"and", "or", "not"}
