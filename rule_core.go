@@ -13,6 +13,9 @@ import (
 
 func injectLogic(rules *Rules, logic string) (*Rules, error) {
 	formatLogic := formatLogicExpression(logic)
+	if formatLogic == " " || formatLogic == "" {
+		return rules, nil
+	}
 	// validate the formatLogic string
 	// 1. only contain legal symbol
 	isValidSymbol := isFormatLogicExpressionAllValidSymbol(formatLogic)
@@ -46,6 +49,9 @@ func injectExtractInfo(rules *Rules, extractInfo map[string]string) *Rules {
 	return rules
 }
 
+/**
+  RulesSet的构造方法，["name": "规则集的名称", "msg": "规则集的简述"]
+ */
 func NewRulesSet(listRules []*Rules, extractInfo map[string]string) *RulesSet {
 	// check if every rules has name, if not give a index as name
 	for index, rules := range listRules {
@@ -149,6 +155,25 @@ func NewRulesWithArray(rules []*Rule) *Rules {
 	return &Rules{
 		Rules: rules,
 	}
+}
+
+func (rss *RulesSet) FitSet(o interface{}) []string {
+	m := structs.Map(o)
+	return rss.FitSetWithMap(m)
+}
+
+func (rss *RulesSet) FitSetWithMap(o map[string]interface{}) []string {
+	result := make([]string, 0)
+	for _, rules := range rss.RulesSet {
+		if fit, _ := rules.FitWithMap(o); fit {
+			// hit this rules
+			result = append(result, rules.Name)
+		}
+	}
+	if len(result) == 0 {
+		return nil
+	}
+	return result
 }
 
 func (rs *Rules) Fit(o interface{}) (bool, map[int]string) {

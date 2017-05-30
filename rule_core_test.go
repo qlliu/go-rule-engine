@@ -209,3 +209,31 @@ func TestNewRulesSet(t *testing.T) {
 	rulesSet := NewRulesSet([]*Rules{rules}, extractInfo)
 	assert.Equal(t, rulesSet.RulesSet[0].Name, "1")
 }
+
+func TestRulesSet_FitSetWithMap(t *testing.T) {
+	jsonStr := []byte(`[
+	{"op": "@", "key": "Status", "val": "abcd", "id": 13},
+	{"op": "=", "key": "Name", "val": "peter", "id": 15},
+	{"op": ">=", "key": "Key", "val": 1, "id": 17}
+	]`)
+	logic := "     "
+	extractInfo := map[string]string{
+		"name": "",
+		"msg": "提示",
+	}
+	rules, err := NewRulesWithJsonAndLogicAndInfo(jsonStr, logic, extractInfo)
+	if err != nil {
+		t.Error(err)
+	}
+
+	rulesSet := NewRulesSet([]*Rules{rules}, extractInfo)
+
+	obj := map[string]interface{}{"Name": "peter", "Status": "abcd", "Key": 0}
+	fitRules, _ := rules.FitWithMap(obj)
+	t.Log(fitRules)
+
+	result := rulesSet.FitSetWithMap(obj)
+	t.Log(result)
+	t.Log(result == nil)
+	t.Log(len(result) == 0)
+}
