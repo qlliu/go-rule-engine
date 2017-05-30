@@ -46,6 +46,22 @@ func injectExtractInfo(rules *Rules, extractInfo map[string]string) *Rules {
 	return rules
 }
 
+func NewRulesSet(listRules []*Rules, extractInfo map[string]string) *RulesSet {
+	// check if every rules has name, if not give a index as name
+	for index, rules := range listRules {
+		if rules.Name == "" {
+			rules.Name = strconv.Itoa(index + 1)
+		}
+	}
+	name, _ := extractInfo["name"]
+	msg, _ := extractInfo["msg"]
+	return &RulesSet{
+		RulesSet: listRules,
+		Name: name,
+		Msg: msg,
+	}
+}
+
 /**
   用json串构造Rules的完全方法，logic表达式如果没有则传空字符串, ["name": "规则名称", "msg": "规则不符合的提示"]
  */
