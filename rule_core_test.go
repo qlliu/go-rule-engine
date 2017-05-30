@@ -140,3 +140,45 @@ func TestNewRulesWithArrayAndLogic(t *testing.T) {
 	t.Log(rules.Rules[0])
 	t.Log(rules.Logic)
 }
+
+func TestNewRulesWithJsonAndLogicAndInfo(t *testing.T) {
+	jsonStr := []byte(`[
+	{"op": "@", "key": "Status", "val": "abcd", "id": 13},
+	{"op": "=", "key": "Name", "val": "peter", "id": 15},
+	{"op": ">=", "key": "Data.Deep", "val": 1, "id": 17}
+	]`)
+	logic := "     13     and  (15or13    )"
+	extractInfo := map[string]string{
+		"name": "名称",
+		"msg": "提示",
+	}
+	rules, err := NewRulesWithJsonAndLogicAndInfo(jsonStr, logic, extractInfo)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(rules.Rules[0])
+	t.Log(rules.Name)
+}
+
+func TestNewRulesWithArrayAndLogicAndInfo(t *testing.T) {
+	jsonStr := []byte(`[
+	{"op": "@", "key": "Status", "val": "abcd", "id": 13},
+	{"op": "=", "key": "Name", "val": "peter", "id": 15},
+	{"op": ">=", "key": "Data.Deep", "val": 1, "id": 17}
+	]`)
+	logic := "     13     and  (15or13    )"
+	extractInfo := map[string]string{
+		"name": "名称",
+		"msg": "提示",
+	}
+	rules, err := NewRulesWithJsonAndLogic(jsonStr, logic)
+	if err != nil {
+		t.Error(err)
+	}
+	rules, err = NewRulesWithArrayAndLogicAndInfo(rules.Rules, logic, extractInfo)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(rules.Rules[0])
+	t.Log(rules.Msg)
+}
