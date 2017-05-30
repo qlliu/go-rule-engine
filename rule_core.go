@@ -2,13 +2,13 @@ package go_rule_engine
 
 import (
 	"encoding/json"
+	"errors"
+	"github.com/fatih/structs"
+	"math/rand"
 	"reflect"
 	"regexp"
-	"strings"
-	"github.com/fatih/structs"
-	"errors"
 	"strconv"
-	"math/rand"
+	"strings"
 )
 
 func injectLogic(rules *Rules, logic string) (*Rules, error) {
@@ -19,7 +19,7 @@ func injectLogic(rules *Rules, logic string) (*Rules, error) {
 	// validate the formatLogic string
 	// 1. only contain legal symbol
 	isValidSymbol := isFormatLogicExpressionAllValidSymbol(formatLogic)
-	if (!isValidSymbol) {
+	if !isValidSymbol {
 		return nil, errors.New("invalid logic expression: invalid symbol")
 	}
 
@@ -31,7 +31,7 @@ func injectLogic(rules *Rules, logic string) (*Rules, error) {
 
 	// 3. all ids in logic string must be in rules ids
 	isValidIds := isFormatLogicExpressionAllIdsExist(formatLogic, rules)
-	if (!isValidIds) {
+	if !isValidIds {
 		return nil, errors.New("invalid logic expression: invalid id")
 	}
 	rules.Logic = formatLogic
@@ -51,7 +51,7 @@ func injectExtractInfo(rules *Rules, extractInfo map[string]string) *Rules {
 
 /**
   RulesSet的构造方法，["name": "规则集的名称", "msg": "规则集的简述"]
- */
+*/
 func NewRulesSet(listRules []*Rules, extractInfo map[string]string) *RulesSet {
 	// check if every rules has name, if not give a index as name
 	for index, rules := range listRules {
@@ -63,14 +63,14 @@ func NewRulesSet(listRules []*Rules, extractInfo map[string]string) *RulesSet {
 	msg, _ := extractInfo["msg"]
 	return &RulesSet{
 		RulesSet: listRules,
-		Name: name,
-		Msg: msg,
+		Name:     name,
+		Msg:      msg,
 	}
 }
 
 /**
   用json串构造Rules的完全方法，logic表达式如果没有则传空字符串, ["name": "规则名称", "msg": "规则不符合的提示"]
- */
+*/
 func NewRulesWithJsonAndLogicAndInfo(jsonStr []byte, logic string, extractInfo map[string]string) (*Rules, error) {
 	rulesObj, err := NewRulesWithJsonAndLogic(jsonStr, logic)
 	if err != nil {
@@ -81,7 +81,7 @@ func NewRulesWithJsonAndLogicAndInfo(jsonStr []byte, logic string, extractInfo m
 
 /**
   用rule数组构造Rules的完全方法，logic表达式如果没有则传空字符串, ["name": "规则名称", "msg": "规则不符合的提示"]
- */
+*/
 func NewRulesWithArrayAndLogicAndInfo(rules []*Rule, logic string, extractInfo map[string]string) (*Rules, error) {
 	rulesObj, err := NewRulesWithArrayAndLogic(rules, logic)
 	if err != nil {
@@ -92,7 +92,7 @@ func NewRulesWithArrayAndLogicAndInfo(rules []*Rule, logic string, extractInfo m
 
 /**
   用json串构造Rules的标准方法，logic表达式如果没有则传空字符串
- */
+*/
 func NewRulesWithJsonAndLogic(jsonStr []byte, logic string) (*Rules, error) {
 	if logic == "" {
 		// empty logic
@@ -112,7 +112,7 @@ func NewRulesWithJsonAndLogic(jsonStr []byte, logic string) (*Rules, error) {
 
 /**
   用rule数组构造Rules的标准方法，logic表达式如果没有则传空字符串
- */
+*/
 func NewRulesWithArrayAndLogic(rules []*Rule, logic string) (*Rules, error) {
 	if logic == "" {
 		// empty logic
@@ -199,7 +199,7 @@ func (rs *Rules) FitWithMap(o map[string]interface{}) (bool, map[int]string) {
 		}
 		flag := rule.fit(v)
 		results[rule.Id] = flag
-		if (!flag) {
+		if !flag {
 			// unfit, record msg
 			tips[rule.Id] = rule.Msg
 		}
@@ -445,7 +445,7 @@ func isFormatLogicExpressionAllValidSymbol(strFormatLogic string) bool {
 				flag = true
 			}
 		}
-		if (!flag) {
+		if !flag {
 			return false
 		}
 	}
@@ -469,11 +469,11 @@ func isFormatLogicExpressionAllIdsExist(strFormatLogic string, rules *Rules) boo
 			if _, ok := mapExistIds[symbol]; ok {
 				continue
 			} else {
-				return false;
+				return false
 			}
 		}
 	}
-	return true;
+	return true
 }
 
 func tryToCalculateResultByFormatLogicExpressionWithRandomProbe(strFormatLogic string) error {

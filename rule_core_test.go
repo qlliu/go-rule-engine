@@ -1,8 +1,8 @@
 package go_rule_engine
 
 import (
-	"testing"
 	"github.com/docker/docker/pkg/testutil/assert"
+	"testing"
 )
 
 func TestNewRulesWithJson(t *testing.T) {
@@ -65,15 +65,15 @@ func TestRules_Fit2(t *testing.T) {
 		Deep int
 	}
 	type A struct {
-		Data B
-		Name string
+		Data   B
+		Name   string
 		Status string
 	}
-	obj := A {
+	obj := A{
 		Data: B{
 			Deep: 1,
 		},
-		Name: "peter",
+		Name:   "peter",
 		Status: "abc",
 	}
 	result, _ := rules.Fit(obj)
@@ -153,7 +153,7 @@ func TestNewRulesWithJsonAndLogicAndInfo(t *testing.T) {
 	logic := "     13     and  (15or13    )"
 	extractInfo := map[string]string{
 		"name": "名称",
-		"msg": "提示",
+		"msg":  "提示",
 	}
 	rules, err := NewRulesWithJsonAndLogicAndInfo(jsonStr, logic, extractInfo)
 	if err != nil {
@@ -172,7 +172,7 @@ func TestNewRulesWithArrayAndLogicAndInfo(t *testing.T) {
 	logic := "     13     and  (15or13    )"
 	extractInfo := map[string]string{
 		"name": "名称",
-		"msg": "提示",
+		"msg":  "提示",
 	}
 	rules, err := NewRulesWithJsonAndLogic(jsonStr, logic)
 	if err != nil {
@@ -195,7 +195,7 @@ func TestNewRulesSet(t *testing.T) {
 	logic := "     13     and  (15or13    )"
 	extractInfo := map[string]string{
 		"name": "",
-		"msg": "提示",
+		"msg":  "提示",
 	}
 	rules, err := NewRulesWithJsonAndLogic(jsonStr, logic)
 	if err != nil {
@@ -219,7 +219,7 @@ func TestRulesSet_FitSetWithMap(t *testing.T) {
 	logic := "     "
 	extractInfo := map[string]string{
 		"name": "",
-		"msg": "提示",
+		"msg":  "提示",
 	}
 	rules, err := NewRulesWithJsonAndLogicAndInfo(jsonStr, logic, extractInfo)
 	if err != nil {

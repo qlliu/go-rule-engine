@@ -1,11 +1,11 @@
 package go_rule_engine
 
 type Rule struct {
-	Op    string      `json:"op"`
-	Key   string      `json:"key"`
-	Val   interface{} `json:"val"`
-	Id    int         `json:"id"`
-	Msg   string 	  `json:"msg"`
+	Op  string      `json:"op"`
+	Key string      `json:"key"`
+	Val interface{} `json:"val"`
+	Id  int         `json:"id"`
+	Msg string      `json:"msg"`
 }
 
 type Rules struct {
@@ -18,7 +18,7 @@ type Rules struct {
 type RulesSet struct {
 	RulesSet []*Rules
 	Name     string
-	Msg 	 string
+	Msg      string
 }
 
-var VALID_OPERATORS  = []string{"and", "or", "not"}
+var VALID_OPERATORS = []string{"and", "or", "not"}
