@@ -1,6 +1,9 @@
 package go_rule_engine
 
-import "testing"
+import (
+	"github.com/docker/docker/pkg/testutil/assert"
+	"testing"
+)
 
 func TestNewRulesWithJson(t *testing.T) {
 	jsonStr := []byte(`[{"op": "=", "key": "status", "val": 1}]`)
@@ -62,15 +65,15 @@ func TestRules_Fit2(t *testing.T) {
 		Deep int
 	}
 	type A struct {
-		Data B
-		Name string
+		Data   B
+		Name   string
 		Status string
 	}
-	obj := A {
+	obj := A{
 		Data: B{
 			Deep: 1,
 		},
-		Name: "peter",
+		Name:   "peter",
 		Status: "abc",
 	}
 	result, _ := rules.Fit(obj)
@@ -139,4 +142,98 @@ func TestNewRulesWithArrayAndLogic(t *testing.T) {
 	}
 	t.Log(rules.Rules[0])
 	t.Log(rules.Logic)
+}
+
+func TestNewRulesWithJsonAndLogicAndInfo(t *testing.T) {
+	jsonStr := []byte(`[
+	{"op": "@", "key": "Status", "val": "abcd", "id": 13},
+	{"op": "=", "key": "Name", "val": "peter", "id": 15},
+	{"op": ">=", "key": "Data.Deep", "val": 1, "id": 17}
+	]`)
+	logic := "     13     and  (15or13    )"
+	extractInfo := map[string]string{
+		"name": "名称",
+		"msg":  "提示",
+	}
+	rules, err := NewRulesWithJsonAndLogicAndInfo(jsonStr, logic, extractInfo)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(rules.Rules[0])
+	t.Log(rules.Name)
+}
+
+func TestNewRulesWithArrayAndLogicAndInfo(t *testing.T) {
+	jsonStr := []byte(`[
+	{"op": "@", "key": "Status", "val": "abcd", "id": 13},
+	{"op": "=", "key": "Name", "val": "peter", "id": 15},
+	{"op": ">=", "key": "Data.Deep", "val": 1, "id": 17}
+	]`)
+	logic := "     13     and  (15or13    )"
+	extractInfo := map[string]string{
+		"name": "名称",
+		"msg":  "提示",
+	}
+	rules, err := NewRulesWithJsonAndLogic(jsonStr, logic)
+	if err != nil {
+		t.Error(err)
+	}
+	rules, err = NewRulesWithArrayAndLogicAndInfo(rules.Rules, logic, extractInfo)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(rules.Rules[0])
+	t.Log(rules.Msg)
+}
+
+func TestNewRulesSet(t *testing.T) {
+	jsonStr := []byte(`[
+	{"op": "@", "key": "Status", "val": "abcd", "id": 13},
+	{"op": "=", "key": "Name", "val": "peter", "id": 15},
+	{"op": ">=", "key": "Data.Deep", "val": 1, "id": 17}
+	]`)
+	logic := "     13     and  (15or13    )"
+	extractInfo := map[string]string{
+		"name": "",
+		"msg":  "提示",
+	}
+	rules, err := NewRulesWithJsonAndLogic(jsonStr, logic)
+	if err != nil {
+		t.Error(err)
+	}
+	rules, err = NewRulesWithArrayAndLogicAndInfo(rules.Rules, logic, extractInfo)
+	if err != nil {
+		t.Error(err)
+	}
+
+	rulesSet := NewRulesSet([]*Rules{rules}, extractInfo)
+	assert.Equal(t, rulesSet.RulesSet[0].Name, "1")
+}
+
+func TestRulesSet_FitSetWithMap(t *testing.T) {
+	jsonStr := []byte(`[
+	{"op": "@", "key": "Status", "val": "abcd", "id": 13},
+	{"op": "=", "key": "Name", "val": "peter", "id": 15},
+	{"op": ">=", "key": "Key", "val": 1, "id": 17}
+	]`)
+	logic := "     "
+	extractInfo := map[string]string{
+		"name": "",
+		"msg":  "提示",
+	}
+	rules, err := NewRulesWithJsonAndLogicAndInfo(jsonStr, logic, extractInfo)
+	if err != nil {
+		t.Error(err)
+	}
+
+	rulesSet := NewRulesSet([]*Rules{rules}, extractInfo)
+
+	obj := map[string]interface{}{"Name": "peter", "Status": "abcd", "Key": 0}
+	fitRules, _ := rules.FitWithMap(obj)
+	t.Log(fitRules)
+
+	result := rulesSet.FitSetWithMap(obj)
+	t.Log(result)
+	t.Log(result == nil)
+	t.Log(len(result) == 0)
 }

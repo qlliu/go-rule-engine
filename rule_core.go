@@ -2,21 +2,24 @@ package go_rule_engine
 
 import (
 	"encoding/json"
+	"errors"
+	"github.com/fatih/structs"
+	"math/rand"
 	"reflect"
 	"regexp"
-	"strings"
-	"github.com/fatih/structs"
-	"errors"
 	"strconv"
-	"math/rand"
+	"strings"
 )
 
 func injectLogic(rules *Rules, logic string) (*Rules, error) {
 	formatLogic := formatLogicExpression(logic)
+	if formatLogic == " " || formatLogic == "" {
+		return rules, nil
+	}
 	// validate the formatLogic string
 	// 1. only contain legal symbol
 	isValidSymbol := isFormatLogicExpressionAllValidSymbol(formatLogic)
-	if (!isValidSymbol) {
+	if !isValidSymbol {
 		return nil, errors.New("invalid logic expression: invalid symbol")
 	}
 
@@ -28,7 +31,7 @@ func injectLogic(rules *Rules, logic string) (*Rules, error) {
 
 	// 3. all ids in logic string must be in rules ids
 	isValidIds := isFormatLogicExpressionAllIdsExist(formatLogic, rules)
-	if (!isValidIds) {
+	if !isValidIds {
 		return nil, errors.New("invalid logic expression: invalid id")
 	}
 	rules.Logic = formatLogic
@@ -36,6 +39,60 @@ func injectLogic(rules *Rules, logic string) (*Rules, error) {
 	return rules, nil
 }
 
+func injectExtractInfo(rules *Rules, extractInfo map[string]string) *Rules {
+	if name, ok := extractInfo["name"]; ok {
+		rules.Name = name
+	}
+	if msg, ok := extractInfo["msg"]; ok {
+		rules.Msg = msg
+	}
+	return rules
+}
+
+/**
+  RulesSet的构造方法，["name": "规则集的名称", "msg": "规则集的简述"]
+*/
+func NewRulesSet(listRules []*Rules, extractInfo map[string]string) *RulesSet {
+	// check if every rules has name, if not give a index as name
+	for index, rules := range listRules {
+		if rules.Name == "" {
+			rules.Name = strconv.Itoa(index + 1)
+		}
+	}
+	name, _ := extractInfo["name"]
+	msg, _ := extractInfo["msg"]
+	return &RulesSet{
+		RulesSet: listRules,
+		Name:     name,
+		Msg:      msg,
+	}
+}
+
+/**
+  用json串构造Rules的完全方法，logic表达式如果没有则传空字符串, ["name": "规则名称", "msg": "规则不符合的提示"]
+*/
+func NewRulesWithJsonAndLogicAndInfo(jsonStr []byte, logic string, extractInfo map[string]string) (*Rules, error) {
+	rulesObj, err := NewRulesWithJsonAndLogic(jsonStr, logic)
+	if err != nil {
+		return nil, err
+	}
+	return injectExtractInfo(rulesObj, extractInfo), nil
+}
+
+/**
+  用rule数组构造Rules的完全方法，logic表达式如果没有则传空字符串, ["name": "规则名称", "msg": "规则不符合的提示"]
+*/
+func NewRulesWithArrayAndLogicAndInfo(rules []*Rule, logic string, extractInfo map[string]string) (*Rules, error) {
+	rulesObj, err := NewRulesWithArrayAndLogic(rules, logic)
+	if err != nil {
+		return nil, err
+	}
+	return injectExtractInfo(rulesObj, extractInfo), nil
+}
+
+/**
+  用json串构造Rules的标准方法，logic表达式如果没有则传空字符串
+*/
 func NewRulesWithJsonAndLogic(jsonStr []byte, logic string) (*Rules, error) {
 	if logic == "" {
 		// empty logic
@@ -53,6 +110,9 @@ func NewRulesWithJsonAndLogic(jsonStr []byte, logic string) (*Rules, error) {
 	return rulesObj, nil
 }
 
+/**
+  用rule数组构造Rules的标准方法，logic表达式如果没有则传空字符串
+*/
 func NewRulesWithArrayAndLogic(rules []*Rule, logic string) (*Rules, error) {
 	if logic == "" {
 		// empty logic
@@ -67,6 +127,7 @@ func NewRulesWithArrayAndLogic(rules []*Rule, logic string) (*Rules, error) {
 	return rulesObj, nil
 }
 
+// Deprecated: 没有考虑logic表达式校验的构造方法
 func NewRulesWithJson(jsonStr []byte) (*Rules, error) {
 	var rules []*Rule
 	err := json.Unmarshal(jsonStr, &rules)
@@ -76,6 +137,7 @@ func NewRulesWithJson(jsonStr []byte) (*Rules, error) {
 	return NewRulesWithArray(rules), nil
 }
 
+// Deprecated: 没有考虑logic表达式校验的构造方法
 func NewRulesWithArray(rules []*Rule) *Rules {
 	// give rule an id
 	var maxId = 1
@@ -93,6 +155,25 @@ func NewRulesWithArray(rules []*Rule) *Rules {
 	return &Rules{
 		Rules: rules,
 	}
+}
+
+func (rss *RulesSet) FitSet(o interface{}) []string {
+	m := structs.Map(o)
+	return rss.FitSetWithMap(m)
+}
+
+func (rss *RulesSet) FitSetWithMap(o map[string]interface{}) []string {
+	result := make([]string, 0)
+	for _, rules := range rss.RulesSet {
+		if fit, _ := rules.FitWithMap(o); fit {
+			// hit this rules
+			result = append(result, rules.Name)
+		}
+	}
+	if len(result) == 0 {
+		return nil
+	}
+	return result
 }
 
 func (rs *Rules) Fit(o interface{}) (bool, map[int]string) {
@@ -118,7 +199,7 @@ func (rs *Rules) FitWithMap(o map[string]interface{}) (bool, map[int]string) {
 		}
 		flag := rule.fit(v)
 		results[rule.Id] = flag
-		if (!flag) {
+		if !flag {
 			// unfit, record msg
 			tips[rule.Id] = rule.Msg
 		}
@@ -364,7 +445,7 @@ func isFormatLogicExpressionAllValidSymbol(strFormatLogic string) bool {
 				flag = true
 			}
 		}
-		if (!flag) {
+		if !flag {
 			return false
 		}
 	}
@@ -388,11 +469,11 @@ func isFormatLogicExpressionAllIdsExist(strFormatLogic string, rules *Rules) boo
 			if _, ok := mapExistIds[symbol]; ok {
 				continue
 			} else {
-				return false;
+				return false
 			}
 		}
 	}
-	return true;
+	return true
 }
 
 func tryToCalculateResultByFormatLogicExpressionWithRandomProbe(strFormatLogic string) error {
