@@ -389,7 +389,7 @@ func formatLogicExpression(strRawExpr string) string {
 		} else {
 			flagNow = flagPre
 		}
-		if flagNow != flagPre {
+		if flagNow != flagPre || flagNow == "bracket" && flagPre == "bracket" {
 			// should insert space here
 			runesPretty = append(runesPretty, []rune(" ")[0])
 		}
