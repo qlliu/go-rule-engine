@@ -237,3 +237,44 @@ func TestRulesSet_FitSetWithMap(t *testing.T) {
 	t.Log(result == nil)
 	t.Log(len(result) == 0)
 }
+
+func TestRules_FitWithMap(t *testing.T) {
+	jsonStr := []byte(`[
+	{"op": "=", "key": "Status", "val": "abcd", "id": 13},
+	{"op": "=", "key": "Name", "val": "peter", "id": 15},
+	{"op": ">=", "key": "Key", "val": 1, "id": 17}
+	]`)
+	logic := "13"
+	extractInfo := map[string]string{
+		"name": "",
+		"msg":  "提示",
+	}
+	rules, err := NewRulesWithJsonAndLogicAndInfo(jsonStr, logic, extractInfo)
+	if err != nil {
+		t.Error(err)
+	}
+	objMap := map[string]interface{}{"Status": "abcd"}
+	fit, _ := rules.FitWithMap(objMap)
+	t.Log(fit)
+}
+
+func TestRules_FitWithMapAskVal(t *testing.T) {
+	jsonStr := []byte(`[
+	{"op": "=", "key": "Status", "val": "abcd", "id": 13},
+	{"op": "=", "key": "Name", "val": "peter", "id": 15},
+	{"op": ">=", "key": "Key", "val": 1, "id": 17}
+	]`)
+	logic := "13"
+	extractInfo := map[string]string{
+		"name": "",
+		"msg":  "提示",
+	}
+	rules, err := NewRulesWithJsonAndLogicAndInfo(jsonStr, logic, extractInfo)
+	if err != nil {
+		t.Error(err)
+	}
+	objMap := map[string]interface{}{"Status": "abcd"}
+	fit, _, val := rules.FitWithMapAskVal(objMap)
+	t.Log(fit)
+	t.Log(val)
+}
