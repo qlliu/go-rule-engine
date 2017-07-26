@@ -182,8 +182,23 @@ func (rs *Rules) Fit(o interface{}) (bool, map[int]string) {
 }
 
 func (rs *Rules) FitWithMap(o map[string]interface{}) (bool, map[int]string) {
+	fit, tips, _ := rs.fitWithMapInFact(o)
+	return fit, tips
+}
+
+func (rs *Rules) FitAskVal(o interface{}) (bool, map[int]string, map[int]interface{}) {
+	m := structs.Map(o)
+	return rs.FitWithMapAskVal(m)
+}
+
+func (rs *Rules) FitWithMapAskVal(o map[string]interface{}) (bool, map[int]string, map[int]interface{}) {
+	return rs.fitWithMapInFact(o)
+}
+
+func (rs *Rules) fitWithMapInFact(o map[string]interface{}) (bool, map[int]string, map[int]interface{}) {
 	var results = make(map[int]bool)
 	var tips = make(map[int]string)
+	var values = make(map[int]interface{})
 	var hasLogic = false
 	if rs.Logic != "" {
 		hasLogic = true
@@ -194,9 +209,11 @@ func (rs *Rules) FitWithMap(o map[string]interface{}) (bool, map[int]string) {
 			typeV := reflect.TypeOf(v)
 			typeR := reflect.TypeOf(rule.Val)
 			if !typeV.Comparable() || !typeR.Comparable() {
-				return false, nil
+				return false, nil, nil
 			}
 		}
+		values[rule.Id] = v
+
 		flag := rule.fit(v)
 		results[rule.Id] = flag
 		if !flag {
@@ -208,16 +225,16 @@ func (rs *Rules) FitWithMap(o map[string]interface{}) (bool, map[int]string) {
 	if !hasLogic {
 		for _, flag := range results {
 			if !flag {
-				return false, tips
+				return false, tips, values
 			}
 		}
-		return true, nil
+		return true, nil, values
 	} else {
 		answer, err := rs.calculateExpression(rs.Logic, results)
 		if err != nil {
-			return false, nil
+			return false, nil, values
 		}
-		return answer, tips
+		return answer, tips, values
 	}
 }
 
