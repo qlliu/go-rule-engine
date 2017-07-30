@@ -9,9 +9,9 @@ import (
 /**
   将逻辑表达式转化为树，返回树的根节点
 */
-func logicToTree(logic string) (*Node, error) {
+func logicToTree(logic string) *Node {
 	if logic == "" || logic == " " {
-		return nil, nil
+		return nil
 	}
 	var head = &Node{
 		Expr:   logic,
@@ -20,7 +20,31 @@ func logicToTree(logic string) (*Node, error) {
 	}
 	head.Leaf = head.isLeaf()
 	propagateTree(head)
-	return head, nil
+	return head
+}
+
+/**
+  层序遍历获取树里面的所有叶子节点
+ */
+func (node *Node) traverseTreeInLayerAskForAllLeafs() []*Node {
+	var leafs []*Node
+	var buf []*Node
+	var i int
+	buf = append(buf, node)
+	for {
+		if i < len(buf) {
+			if buf[i].Leaf {
+				leafs = append(leafs, buf[i])
+			}
+			if buf[i].Children != nil {
+				buf = append(buf, buf[i].Children...)
+			}
+			i++
+		} else {
+			break
+		}
+	}
+	return leafs
 }
 
 func propagateTree(head *Node) {
@@ -160,3 +184,5 @@ func replaceBiggestBracketContentAtOnce(expr string, mapReplace map[string]strin
 	}
 	return result, mapReplace
 }
+
+

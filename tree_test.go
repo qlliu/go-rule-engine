@@ -8,10 +8,7 @@ import (
 
 func TestLogicToTree(t *testing.T) {
 	logic := "1 or 2"
-	head, err := logicToTree(logic)
-	if err != nil {
-		t.Error(err)
-	}
+	head := logicToTree(logic)
 	t.Log(head)
 }
 
@@ -56,10 +53,7 @@ func TestReplaceBiggestBracketContent5(t *testing.T) {
 
 func TestLogicToTree2(t *testing.T) {
 	logic := "1 and 2 and ( 3 or not ( 2 and 4 ) )"
-	head, err := logicToTree(logic)
-	if err != nil {
-		t.Error(err)
-	}
+	head := logicToTree(logic)
 	traverseTreeInLayer(head, t)
 }
 
@@ -77,5 +71,14 @@ func traverseTreeInLayer(head *Node, t *testing.T) {
 		} else {
 			break
 		}
+	}
+}
+
+func TestTraverseTreeInLayerAskForAllLeafs(t *testing.T) {
+	logic := "1 and 2 and ( 3 or not ( 2 and 4 ) )"
+	head := logicToTree(logic)
+	leafs := head.traverseTreeInLayerAskForAllLeafs()
+	for _, v := range leafs {
+		fmt.Printf("%+v\n", v)
 	}
 }
