@@ -1,13 +1,33 @@
 package go_rule_engine
 
 import (
-	"strings"
 	"github.com/satori/go.uuid"
+	"regexp"
+	"strings"
 )
 
-func logicToTree(logic string) (head *Node, err error) {
+/**
+  将逻辑表达式转化为树，返回树的根节点
+*/
+func logicToTree(logic string) (*Node, error) {
+	if logic == "" || logic == " " {
+		return nil, nil
+	}
+	var head = shipChildren([]string{logic}, true, nil)[0]
+	propagateTree(head)
+	return head, nil
+}
 
-	return nil, nil
+func propagateTree(head *Node) {
+	children := splitExprToChildren(head.Expr)
+	if children != nil {
+		head.Children = children
+	} else {
+		return
+	}
+	for index := range head.Children {
+		propagateTree(head.Children[index])
+	}
 }
 
 func splitExprToChildren(expr string) []*Node {
@@ -38,12 +58,18 @@ func shipChildren(splits []string, should bool, mapReplace map[string]string) []
 			if o == k {
 				o = mapReplace[k]
 			} else if strings.Contains(o, k) {
-				o = strings.Replace(o, k, "( " + v + " )", -1)
+				o = strings.Replace(o, k, "( "+v+" )", -1)
 			}
+		}
+		// judge if leaf
+		var leaf bool
+		if flag, _ := regexp.MatchString("^\\d+$", o); flag {
+			leaf = true
 		}
 
 		child := &Node{
-			Expr: o,
+			Expr:   o,
+			Leaf:   leaf,
 			Should: should,
 		}
 		children = append(children, child)

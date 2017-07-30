@@ -1,8 +1,8 @@
 package go_rule_engine
 
 import (
-	"testing"
 	"github.com/satori/go.uuid"
+	"testing"
 )
 
 func TestLogicToTree(t *testing.T) {
@@ -76,4 +76,30 @@ func TestReplaceBiggestBracketContent5(t *testing.T) {
 	expr := "1 or 2 and ( 3 or ( 2 and 4 ) )"
 	result, _ := replaceBiggestBracketContentAtOnce(expr, make(map[string]string, 0))
 	t.Log(result)
+}
+
+func TestLogicToTree2(t *testing.T) {
+	logic := "1 or 2 and ( 3 or ( 2 and 4 ) )"
+	head, err := logicToTree(logic)
+	if err != nil {
+		t.Error(err)
+	}
+	traverseTreeInLayer(head, t)
+}
+
+func traverseTreeInLayer(head *Node, t *testing.T) {
+	var buf []*Node
+	var i int
+	buf = append(buf, head)
+	for {
+		if i < len(buf) {
+			t.Log(buf[i])
+			if buf[i].Children != nil {
+				buf = append(buf, buf[i].Children...)
+			}
+			i++
+		} else {
+			break
+		}
+	}
 }
