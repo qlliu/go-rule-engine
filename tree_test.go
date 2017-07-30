@@ -60,7 +60,20 @@ func TestReplaceBiggestBracketContent2(t *testing.T) {
 }
 
 func TestSplitExprToChildren4(t *testing.T) {
-	expr := "( 1 or 2 ) and 3 or ( 2 and 4 )"
+	expr := "( 1 or 2 ) and ( 3 or ( 2 and 4 ) )"
 	children := splitExprToChildren(expr)
 	printChildren(children, t)
+}
+
+func TestReplaceBiggestBracketContent4(t *testing.T) {
+	expr := "( 1 or 2 ) and ( 3 or ( 2 and 4 ) )"
+	result, mapReplace := replaceBiggestBracketContent(expr)
+	t.Log(result)
+	t.Log(mapReplace)
+}
+
+func TestReplaceBiggestBracketContent5(t *testing.T) {
+	expr := "1 or 2 and ( 3 or ( 2 and 4 ) )"
+	result, _ := replaceBiggestBracketContentAtOnce(expr, make(map[string]string, 0))
+	t.Log(result)
 }

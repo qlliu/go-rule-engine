@@ -73,6 +73,10 @@ func replaceBiggestBracketContentAtOnce(expr string, mapReplace map[string]strin
 	runeExpr := []rune(expr)
 
 	for _, v := range runeExpr {
+		if flag {
+			// add to buffer
+			toReplace = append(toReplace, v)
+		}
 		if v == '(' {
 			flag = true
 			bracketStack = append(bracketStack, v)
@@ -83,13 +87,12 @@ func replaceBiggestBracketContentAtOnce(expr string, mapReplace map[string]strin
 				// it's one biggest (***)block, break to replace
 				break
 			}
-		} else if flag {
-			// add to buffer
-			toReplace = append(toReplace, v)
 		}
 	}
 
 	if flag {
+		// delete last )
+		toReplace = toReplace[:len(toReplace)-1]
 		key := uuid.NewV1().String()
 		result = strings.Replace(result, "("+string(toReplace)+")", key, 1)
 		mapReplace[key] = strings.Trim(string(toReplace), " ")
