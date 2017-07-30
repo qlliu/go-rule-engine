@@ -13,13 +13,18 @@ func logicToTree(logic string) (*Node, error) {
 	if logic == "" || logic == " " {
 		return nil, nil
 	}
-	var head = shipChildren([]string{logic}, true, nil)[0]
+	var head = &Node{
+		Expr:   logic,
+		Should: true,
+		Blamed: true,
+	}
+	head.Leaf = head.isLeaf()
 	propagateTree(head)
 	return head, nil
 }
 
 func propagateTree(head *Node) {
-	children := splitExprToChildren(head.Expr)
+	children := head.splitExprToChildren()
 	if children != nil {
 		head.Children = children
 	} else {
@@ -30,29 +35,33 @@ func propagateTree(head *Node) {
 	}
 }
 
-func splitExprToChildren(expr string) []*Node {
+func (node *Node) splitExprToChildren() []*Node {
 	// wrap biggest (***) block
-	exprWrap, mapReplace := replaceBiggestBracketContent(expr)
+	exprWrap, mapReplace := replaceBiggestBracketContent(node.Expr)
 	// or layer
 	ors := strings.Split(exprWrap, " or ")
 	if len(ors) > 1 {
-		return shipChildren(ors, true, mapReplace)
+		node.ChildrenOp = string(OperatorOr)
+		return node.shipChildren(ors, mapReplace)
 	}
 	// and layer
 	ands := strings.Split(exprWrap, " and ")
 	if len(ands) > 1 {
-		return shipChildren(ands, true, mapReplace)
+		node.ChildrenOp = string(OperatorAnd)
+		return node.shipChildren(ands, mapReplace)
 	}
 	// not layer
 	not := strings.Split(exprWrap, "not ")
 	if len(not) > 1 {
-		return shipChildren([]string{not[1]}, false, mapReplace)
+		node.ChildrenOp = string(OperatorNot)
+		return node.shipChildren([]string{not[1]}, mapReplace)
 	}
 	return nil
 }
 
-func shipChildren(splits []string, should bool, mapReplace map[string]string) []*Node {
+func (node *Node) shipChildren(splits []string, mapReplace map[string]string) []*Node {
 	var children = make([]*Node, 0)
+	var isFirstChild = true
 	for _, o := range splits {
 		for k, v := range mapReplace {
 			if o == k {
@@ -61,20 +70,46 @@ func shipChildren(splits []string, should bool, mapReplace map[string]string) []
 				o = strings.Replace(o, k, "( "+v+" )", -1)
 			}
 		}
-		// judge if leaf
-		var leaf bool
-		if flag, _ := regexp.MatchString("^\\d+$", o); flag {
-			leaf = true
+		var should bool
+		var blamed bool
+		switch node.ChildrenOp {
+		case string(OperatorAnd):
+			should = true
+			// and和not的时候所有子树都有责任
+			blamed = true
+		case string(OperatorOr):
+			should = true
+			// or的时候只有第一个子树有责任
+			if isFirstChild {
+				blamed = true
+			}
+		case string(OperatorNot):
+			should = false
+			// and和not的时候所有子树都有责任
+			blamed = true
 		}
+		// 父节点无责任，子树也无责任
+		blamed = node.Blamed && blamed
 
 		child := &Node{
 			Expr:   o,
-			Leaf:   leaf,
 			Should: should,
+			Blamed: blamed,
 		}
+		// judge if leaf
+		child.Leaf = child.isLeaf()
+
 		children = append(children, child)
+		isFirstChild = false
 	}
 	return children
+}
+
+func (node *Node) isLeaf() bool {
+	if flag, _ := regexp.MatchString("^\\d+$", node.Expr); flag {
+		return true
+	}
+	return false
 }
 
 func replaceBiggestBracketContent(expr string) (string, map[string]string) {

@@ -24,11 +24,20 @@ type RulesSet struct {
 var VALID_OPERATORS = []string{"and", "or", "not"}
 
 type Node struct {
-	Expr     string  // 分割的logic表达式
-	Val      bool    // 节点值
-	Computed bool    // 节点值被计算过
-	Children []*Node // 孩子树
-	Leaf     bool    // 是否叶子节点
-	Should   bool    // 为了Fit为true，此节点必须的值
-	Blamed   bool    // 此节点为了Fit为true，有责任必须为某值
+	Expr       string  // 分割的logic表达式
+	Val        bool    // 节点值
+	Computed   bool    // 节点值被计算过
+	Children   []*Node // 孩子树
+	ChildrenOp string  // 孩子树之间的运算符: and, or, not
+	Leaf       bool    // 是否叶子节点
+	Should     bool    // 为了Fit为true，此节点必须的值
+	Blamed     bool    // 此节点为了Fit为true，有责任必须为某值
 }
+
+type Operator string
+
+const (
+	OperatorAnd Operator = "and"
+	OperatorOr  Operator = "or"
+	OperatorNot Operator = "not"
+)
