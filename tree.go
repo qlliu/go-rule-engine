@@ -1,10 +1,40 @@
 package go_rule_engine
 
 import (
+	"errors"
 	"github.com/satori/go.uuid"
 	"regexp"
+	"strconv"
 	"strings"
 )
+
+/**
+  利用树来计算规则引擎
+  输入：子规则ID和逻辑值map
+  输出：规则匹配结果，导致匹配false的子规则ID
+*/
+func (rs *Rules) calculateExpressionByTree(values map[int]bool) (bool, []int, error) {
+	var unfitIDs []int
+	head := logicToTree(rs.Logic)
+	leafs := head.traverseTreeInLayerAskForAllLeafs()
+	for _, leaf := range leafs {
+		if leaf.Blamed {
+			ruleId, err := strconv.Atoi(leaf.Expr)
+			if err != nil {
+				return false, nil, err
+			}
+			actual, ok := values[ruleId]
+			if !ok {
+				return false, nil, errors.New("not found this rule value: " + leaf.Expr)
+			}
+			if leaf.Should != actual {
+				// 此规则导致整体不匹配
+				unfitIDs = append(unfitIDs, ruleId)
+			}
+		}
+	}
+	return len(unfitIDs) == 0, unfitIDs, nil
+}
 
 /**
   将逻辑表达式转化为树，返回树的根节点
@@ -25,7 +55,7 @@ func logicToTree(logic string) *Node {
 
 /**
   层序遍历获取树里面的所有叶子节点
- */
+*/
 func (node *Node) traverseTreeInLayerAskForAllLeafs() []*Node {
 	var leafs []*Node
 	var buf []*Node
@@ -184,5 +214,3 @@ func replaceBiggestBracketContentAtOnce(expr string, mapReplace map[string]strin
 	}
 	return result, mapReplace
 }
-
-

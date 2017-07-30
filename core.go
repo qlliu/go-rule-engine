@@ -137,7 +137,7 @@ func (rs *Rules) fitWithMapInFact(o map[string]interface{}) (bool, map[int]strin
 		flag := rule.fit(v)
 		results[rule.Id] = flag
 		if !flag {
-			// unfit, record msg
+			// fit false, record msg, for no logic expression usage
 			tips[rule.Id] = rule.Msg
 		}
 	}
@@ -150,12 +150,28 @@ func (rs *Rules) fitWithMapInFact(o map[string]interface{}) (bool, map[int]strin
 		}
 		return true, nil, values
 	} else {
-		answer, err := rs.calculateExpression(rs.Logic, results)
+		// this use reverse_polish_notation
+		//answer, err := rs.calculateExpression(rs.Logic, results)
+		answer, unfitRuleIDs, err := rs.calculateExpressionByTree(results)
+		// tree can return fail reasons in fact
+		tips = rs.getFailTipsByRuleIDs(unfitRuleIDs)
 		if err != nil {
 			return false, nil, values
 		}
 		return answer, tips, values
 	}
+}
+
+func (rs *Rules) getFailTipsByRuleIDs(unfitIDs []int) map[int]string {
+	var failTips = make(map[int]string, 0)
+	var allTips = make(map[int]string, 0)
+	for _, rule := range rs.Rules {
+		allTips[rule.Id] = rule.Msg
+	}
+	for _, id := range unfitIDs {
+		failTips[id] = allTips[id]
+	}
+	return failTips
 }
 
 func (r *Rule) fit(v interface{}) bool {
@@ -433,7 +449,7 @@ func tryToCalculateResultByFormatLogicExpressionWithRandomProbe(strFormatLogic s
 			mapProbe[id] = randomBool
 		}
 	}
-	// calculate
+	// calculate still use reverse_polish_notation
 	r := &Rules{}
 	_, err = r.calculateExpression(strFormatLogic, mapProbe)
 	if err != nil {
