@@ -7,7 +7,7 @@ import (
 
 func TestNewRulesWithJson(t *testing.T) {
 	jsonStr := []byte(`[{"op": "=", "key": "status", "val": 1}]`)
-	rules, err := NewRulesWithJson(jsonStr)
+	rules, err := newRulesWithJson(jsonStr)
 	if err != nil {
 		t.Error(err)
 	}
@@ -38,7 +38,7 @@ func TestRules_Fit(t *testing.T) {
 	{"op": "=", "key": "name", "val": "peter", "id": 15},
 	{"op": ">=", "key": "data.deep", "val": 1, "id": 17, "msg": "deep 数值不对"}
 	]`)
-	rules, err := NewRulesWithJson(jsonStr)
+	rules, err := newRulesWithJson(jsonStr)
 	if err != nil {
 		t.Error(err)
 	}
@@ -56,7 +56,7 @@ func TestRules_Fit2(t *testing.T) {
 	{"op": "=", "key": "Name", "val": "peter", "id": 15},
 	{"op": ">=", "key": "Data.Deep", "val": 1, "id": 17}
 	]`)
-	rules, err := NewRulesWithJson(jsonStr)
+	rules, err := newRulesWithJson(jsonStr)
 	if err != nil {
 		t.Error(err)
 	}

@@ -68,18 +68,16 @@ func NewRulesSet(listRules []*Rules, extractInfo map[string]string) *RulesSet {
 	}
 }
 
-// Deprecated: 没有考虑logic表达式校验的构造方法
-func NewRulesWithJson(jsonStr []byte) (*Rules, error) {
+func newRulesWithJson(jsonStr []byte) (*Rules, error) {
 	var rules []*Rule
 	err := json.Unmarshal(jsonStr, &rules)
 	if err != nil {
 		return nil, err
 	}
-	return NewRulesWithArray(rules), nil
+	return newRulesWithArray(rules), nil
 }
 
-// Deprecated: 没有考虑logic表达式校验的构造方法
-func NewRulesWithArray(rules []*Rule) *Rules {
+func newRulesWithArray(rules []*Rule) *Rules {
 	// give rule an id
 	var maxId = 1
 	for _, rule := range rules {

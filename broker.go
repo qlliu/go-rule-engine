@@ -30,9 +30,9 @@ func NewRulesWithArrayAndLogicAndInfo(rules []*Rule, logic string, extractInfo m
 func NewRulesWithJsonAndLogic(jsonStr []byte, logic string) (*Rules, error) {
 	if logic == "" {
 		// empty logic
-		return NewRulesWithJson(jsonStr)
+		return newRulesWithJson(jsonStr)
 	}
-	rulesObj, err := NewRulesWithJson(jsonStr)
+	rulesObj, err := newRulesWithJson(jsonStr)
 	if err != nil {
 		return nil, err
 	}
@@ -50,9 +50,9 @@ func NewRulesWithJsonAndLogic(jsonStr []byte, logic string) (*Rules, error) {
 func NewRulesWithArrayAndLogic(rules []*Rule, logic string) (*Rules, error) {
 	if logic == "" {
 		// empty logic
-		return NewRulesWithArray(rules), nil
+		return newRulesWithArray(rules), nil
 	}
-	rulesObj := NewRulesWithArray(rules)
+	rulesObj := newRulesWithArray(rules)
 	rulesObj, err := injectLogic(rulesObj, logic)
 	if err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func NewRulesWithArrayAndLogic(rules []*Rule, logic string) (*Rules, error) {
 
 /**
   Rules匹配传入结构体
- */
+*/
 func (rs *Rules) Fit(o interface{}) (bool, map[int]string) {
 	m := structs.Map(o)
 	return rs.FitWithMap(m)
@@ -71,7 +71,7 @@ func (rs *Rules) Fit(o interface{}) (bool, map[int]string) {
 
 /**
   Rules匹配map
- */
+*/
 func (rs *Rules) FitWithMap(o map[string]interface{}) (bool, map[int]string) {
 	fit, tips, _ := rs.fitWithMapInFact(o)
 	return fit, tips
@@ -79,7 +79,7 @@ func (rs *Rules) FitWithMap(o map[string]interface{}) (bool, map[int]string) {
 
 /**
   Rules匹配结构体，同时返回所有子规则key值
- */
+*/
 func (rs *Rules) FitAskVal(o interface{}) (bool, map[int]string, map[int]interface{}) {
 	m := structs.Map(o)
 	return rs.FitWithMapAskVal(m)
@@ -87,7 +87,7 @@ func (rs *Rules) FitAskVal(o interface{}) (bool, map[int]string, map[int]interfa
 
 /**
   Rules匹配map，同时返回所有子规则key值
- */
+*/
 func (rs *Rules) FitWithMapAskVal(o map[string]interface{}) (bool, map[int]string, map[int]interface{}) {
 	return rs.fitWithMapInFact(o)
 }
