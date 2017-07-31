@@ -187,17 +187,18 @@ func (node *Node) shipChildren(splits []string, mapReplace map[string]string) []
 		var blamed bool
 		switch node.ChildrenOp {
 		case string(OperatorAnd):
-			should = true
+			// 跟父节点
+			should = node.Should
 			// and和not的时候所有子树都有责任
 			blamed = true
 		case string(OperatorOr):
-			should = true
+			should = node.Should
 			// or的时候只有第一个子树有责任
 			if isFirstChild {
 				blamed = true
 			}
 		case string(OperatorNot):
-			should = false
+			should = !node.Should
 			// and和not的时候所有子树都有责任
 			blamed = true
 		}

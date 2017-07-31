@@ -93,4 +93,3 @@ func TestLogicToTree3(t *testing.T) {
 	head := logicToTree(logic)
 	traverseTreeInPostOrder(head)
 }
-
