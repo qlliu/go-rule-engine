@@ -2,6 +2,7 @@ package go_rule_engine
 
 import (
 	"errors"
+	"fmt"
 	"github.com/satori/go.uuid"
 	"regexp"
 	"strconv"
@@ -16,24 +17,14 @@ import (
 func (rs *Rules) calculateExpressionByTree(values map[int]bool) (bool, []int, error) {
 	var unfitIDs []int
 	head := logicToTree(rs.Logic)
-	leafs := head.traverseTreeInLayerAskForAllLeafs()
-	for _, leaf := range leafs {
-		if leaf.Blamed {
-			ruleId, err := strconv.Atoi(leaf.Expr)
-			if err != nil {
-				return false, nil, err
-			}
-			actual, ok := values[ruleId]
-			if !ok {
-				return false, nil, errors.New("not found this rule value: " + leaf.Expr)
-			}
-			if leaf.Should != actual {
-				// 此规则导致整体不匹配
-				unfitIDs = append(unfitIDs, ruleId)
-			}
-		}
+	err := head.traverseTreeInPostOrderForCalculate(values)
+	if err != nil {
+		return false, nil, err
 	}
-	return len(unfitIDs) == 0, unfitIDs, nil
+	if !head.Computed {
+		return false, nil, errors.New("didn't count out yet")
+	}
+	return head.Val, unfitIDs, nil
 }
 
 /**
@@ -51,6 +42,51 @@ func logicToTree(logic string) *Node {
 	head.Leaf = head.isLeaf()
 	propagateTree(head)
 	return head
+}
+
+/**
+  计算树所有节点值的核心方法
+*/
+func (node *Node) traverseTreeInPostOrderForCalculate(values map[int]bool) error {
+	children := node.Children
+	if children != nil {
+		for _, child := range children {
+			child.traverseTreeInPostOrderForCalculate(values)
+		}
+	}
+	if node.Leaf {
+		// calculate leaf node
+		ruleId, err := strconv.Atoi(node.Expr)
+		if err != nil {
+			return err
+		}
+		if val, ok := values[ruleId]; ok {
+			node.Val = val
+			node.Computed = true
+		} else {
+			return errors.New(fmt.Sprintf("not exist rule_id: %d", ruleId))
+		}
+		return nil
+	}
+	// calculate not-leaf node by children and their op
+	op := node.ChildrenOp
+	tmpVal := node.Children[0].Val
+	if numOfOperandInLogic(op) == 1 {
+		node.Val = !tmpVal
+		node.Computed = true
+	} else {
+		var err error
+		for _, child := range node.Children {
+			// because a = a and a, a = a or a, so can simply duplicated
+			tmpVal, err = computeOneInLogic(op, []bool{tmpVal, child.Val})
+			if err != nil {
+				return err
+			}
+		}
+		node.Val = tmpVal
+		node.Computed = true
+	}
+	return nil
 }
 
 /**

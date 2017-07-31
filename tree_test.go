@@ -74,6 +74,26 @@ func traverseTreeInLayer(head *Node, t *testing.T) {
 	}
 }
 
+func traverseTreeInPostOrder(head *Node) {
+	children := head.Children
+	if children != nil {
+		for _, child := range children {
+			traverseTreeInPostOrder(child)
+		}
+	}
+	if head.Leaf {
+		fmt.Printf("%+v\n", head)
+		return
+	}
+	fmt.Printf("%+v\n", head)
+}
+
+func TestLogicToTree3(t *testing.T) {
+	logic := "1 and 2 and ( 3 or not ( 2 and 4 ) )"
+	head := logicToTree(logic)
+	traverseTreeInPostOrder(head)
+}
+
 func TestTraverseTreeInLayerAskForAllLeafs(t *testing.T) {
 	logic := "1 and 2 and ( 3 or not ( 2 and 4 ) )"
 	head := logicToTree(logic)
