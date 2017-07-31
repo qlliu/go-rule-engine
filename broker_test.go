@@ -11,7 +11,7 @@ func TestRules_Fit3(t *testing.T) {
 	{"op": ">", "key": "B", "val": 1, "id": 2, "msg": "B fail"},
 	{"op": "<", "key": "C", "val": 5, "id": 3, "msg": "C fail"}
 	]`)
-	logic := "1 and 2 and (not 3 or (1 or 2))"
+	logic := "1 and 2 and ( not (1 or 2) or not 3)"
 	rs, err := NewRulesWithJsonAndLogic(jsonRules, logic)
 	if err != nil {
 		t.Error(err)

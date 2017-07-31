@@ -24,6 +24,13 @@ func (rs *Rules) calculateExpressionByTree(values map[int]bool) (bool, []int, er
 	if !head.Computed {
 		return false, nil, errors.New("didn't count out yet")
 	}
+	if !head.Val {
+		// fail了需要找原因
+		unfitIDs, err = head.traverseTreeInLayerToFindFailRule(unfitIDs)
+		if err != nil {
+			return false, nil, err
+		}
+	}
 	return head.Val, unfitIDs, nil
 }
 
@@ -90,19 +97,31 @@ func (node *Node) traverseTreeInPostOrderForCalculate(values map[int]bool) error
 }
 
 /**
-  层序遍历获取树里面的所有叶子节点
+  层序遍历获取导致树顶false的叶子节点
 */
-func (node *Node) traverseTreeInLayerAskForAllLeafs() []*Node {
-	var leafs []*Node
+func (node *Node) traverseTreeInLayerToFindFailRule(unfitIDs []int) ([]int, error) {
 	var buf []*Node
 	var i int
 	buf = append(buf, node)
 	for {
 		if i < len(buf) {
 			if buf[i].Leaf {
-				leafs = append(leafs, buf[i])
+				if buf[i].isFailNode() {
+					// 找到了导致失败的叶子节点
+					ruleID, err := strconv.Atoi(buf[i].Expr)
+					if err != nil {
+						return nil, err
+					}
+					unfitIDs = append(unfitIDs, ruleID)
+					return unfitIDs, nil
+					break
+				}
 			}
 			if buf[i].Children != nil {
+				if buf[i].isFailNode() {
+					// 找到了导致失败的非叶子节点，遍历它即可，所以要清空它后面的所有节点
+					buf = append(buf[:i+1])
+				}
 				buf = append(buf, buf[i].Children...)
 			}
 			i++
@@ -110,7 +129,11 @@ func (node *Node) traverseTreeInLayerAskForAllLeafs() []*Node {
 			break
 		}
 	}
-	return leafs
+	return unfitIDs, nil
+}
+
+func (node *Node) isFailNode() bool {
+	return node.Blamed && node.Computed && node.Should != node.Val
 }
 
 func propagateTree(head *Node) {

@@ -94,11 +94,3 @@ func TestLogicToTree3(t *testing.T) {
 	traverseTreeInPostOrder(head)
 }
 
-func TestTraverseTreeInLayerAskForAllLeafs(t *testing.T) {
-	logic := "1 and 2 and ( 3 or not ( 2 and 4 ) )"
-	head := logicToTree(logic)
-	leafs := head.traverseTreeInLayerAskForAllLeafs()
-	for _, v := range leafs {
-		fmt.Printf("%+v\n", v)
-	}
-}
