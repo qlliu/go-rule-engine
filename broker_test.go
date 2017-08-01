@@ -70,7 +70,7 @@ func TestRules_Fit5(t *testing.T) {
 	{"op": ">", "key": "B", "val": 1, "id": 2, "msg": "B fail"},
 	{"op": "<", "key": "C", "val": 5, "id": 3, "msg": "C fail"}
 	]`)
-	logic := "1 and 2 and not 3"
+	logic := "1 2"
 	rs, err := NewRulesWithJsonAndLogic(jsonRules, logic)
 	if err != nil {
 		t.Error(err)

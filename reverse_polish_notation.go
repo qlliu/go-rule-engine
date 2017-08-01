@@ -162,7 +162,7 @@ func (*Rules) calculateExpression(expr string, values map[int]bool) (bool, error
 		stackNum.Remove(stackNum.Front())
 	}
 
-	if stackOp.Back() == nil {
+	if stackOp.Back() == nil || stackOp.Len() != 1 {
 		return false, errors.New("error expression to calculate: " + expr)
 	}
 	result, ok := stackOp.Back().Value.(bool)

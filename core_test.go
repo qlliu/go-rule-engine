@@ -1,8 +1,9 @@
 package go_rule_engine
 
 import (
-	"github.com/docker/docker/pkg/testutil/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewRulesWithJson(t *testing.T) {

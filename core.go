@@ -3,12 +3,13 @@ package go_rule_engine
 import (
 	"encoding/json"
 	"errors"
-	"github.com/fatih/structs"
 	"math/rand"
 	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/fatih/structs"
 )
 
 func injectLogic(rules *Rules, logic string) (*Rules, error) {
