@@ -179,6 +179,6 @@ func isOpBiggerInLogic(obj, base string) bool {
 	if base == "" {
 		return true
 	}
-	mapPriority := map[string]int8{"or": 2, "and": 3, "not": 5, "(": 0, ")": 1}
+	mapPriority := map[string]int8{"or": 3, "and": 3, "not": 5, "(": 0, ")": 1}
 	return mapPriority[obj] > mapPriority[base]
 }
