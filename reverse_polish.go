@@ -1,4 +1,4 @@
-package go_rule_engine
+package ruler
 
 import (
 	"container/list"

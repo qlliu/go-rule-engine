@@ -1,8 +1,10 @@
-package go_rule_engine
+package ruler
 
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRules_Fit3(t *testing.T) {
@@ -12,7 +14,7 @@ func TestRules_Fit3(t *testing.T) {
 	{"op": "<", "key": "C", "val": 5, "id": 3, "msg": "C fail"}
 	]`)
 	logic := "1 and 2 and ( not (1 or 2) or not 3)"
-	rs, err := NewRulesWithJsonAndLogic(jsonRules, logic)
+	rs, err := NewRulesWithJSONAndLogic(jsonRules, logic)
 	if err != nil {
 		t.Error(err)
 	}
@@ -38,7 +40,7 @@ func TestRules_Fit4(t *testing.T) {
 	{"op": "<", "key": "C", "val": 5, "id": 3, "msg": "C fail"}
 	]`)
 	logic := "1 or 2"
-	rs, err := NewRulesWithJsonAndLogic(jsonRules, logic)
+	rs, err := NewRulesWithJSONAndLogic(jsonRules, logic)
 	if err != nil {
 		t.Error(err)
 	}
@@ -71,21 +73,6 @@ func TestRules_Fit5(t *testing.T) {
 	{"op": "<", "key": "C", "val": 5, "id": 3, "msg": "C fail"}
 	]`)
 	logic := "1 2"
-	rs, err := NewRulesWithJsonAndLogic(jsonRules, logic)
-	if err != nil {
-		t.Error(err)
-	}
-	type Obj struct {
-		A int
-		B int
-		C int
-	}
-	o := &Obj{
-		A: 3,
-		B: 3,
-		C: 3,
-	}
-	fit, msg := rs.Fit(o)
-	t.Log(fit)
-	t.Log(msg)
+	_, err := NewRulesWithJSONAndLogic(jsonRules, logic)
+	assert.NotNil(t, err)
 }

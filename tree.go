@@ -1,12 +1,13 @@
-package go_rule_engine
+package ruler
 
 import (
 	"errors"
 	"fmt"
-	"github.com/satori/go.uuid"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/satori/go.uuid"
 )
 
 /**
@@ -58,20 +59,23 @@ func (node *Node) traverseTreeInPostOrderForCalculate(values map[int]bool) error
 	children := node.Children
 	if children != nil {
 		for _, child := range children {
-			child.traverseTreeInPostOrderForCalculate(values)
+			err := child.traverseTreeInPostOrderForCalculate(values)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	if node.Leaf {
 		// calculate leaf node
-		ruleId, err := strconv.Atoi(node.Expr)
+		ruleID, err := strconv.Atoi(node.Expr)
 		if err != nil {
 			return err
 		}
-		if val, ok := values[ruleId]; ok {
+		if val, ok := values[ruleID]; ok {
 			node.Val = val
 			node.Computed = true
 		} else {
-			return errors.New(fmt.Sprintf("not exist rule_id: %d", ruleId))
+			return fmt.Errorf("not exist rule_id: %d", ruleID)
 		}
 		return nil
 	}
@@ -114,7 +118,6 @@ func (node *Node) traverseTreeInLayerToFindFailRule(unfitIDs []int) ([]int, erro
 					}
 					unfitIDs = append(unfitIDs, ruleID)
 					return unfitIDs, nil
-					break
 				}
 			}
 			if buf[i].Children != nil {
@@ -228,7 +231,7 @@ func (node *Node) isLeaf() bool {
 
 func replaceBiggestBracketContent(expr string) (string, map[string]string) {
 	var result = expr
-	var mapReplace = make(map[string]string, 0)
+	var mapReplace = make(map[string]string)
 	for {
 		before := result
 		result, mapReplace = replaceBiggestBracketContentAtOnce(result, mapReplace)
@@ -245,9 +248,8 @@ func replaceBiggestBracketContentAtOnce(expr string, mapReplace map[string]strin
 	var flag bool
 	bracketStack := make([]rune, 0)
 	toReplace := make([]rune, 0)
-	runeExpr := []rune(expr)
 
-	for _, v := range runeExpr {
+	for _, v := range expr {
 		if flag {
 			// add to buffer
 			toReplace = append(toReplace, v)

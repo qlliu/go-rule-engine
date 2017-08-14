@@ -1,4 +1,4 @@
-package go_rule_engine
+package ruler
 
 import (
 	"testing"
@@ -6,9 +6,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewRulesWithJson(t *testing.T) {
+func TestNewRulesWithJSON(t *testing.T) {
 	jsonStr := []byte(`[{"op": "=", "key": "status", "val": 1}]`)
-	rules, err := newRulesWithJson(jsonStr)
+	rules, err := newRulesWithJSON(jsonStr)
 	if err != nil {
 		t.Error(err)
 	}
@@ -39,7 +39,7 @@ func TestRules_Fit(t *testing.T) {
 	{"op": "=", "key": "name", "val": "peter", "id": 15},
 	{"op": ">=", "key": "data.deep", "val": 1, "id": 17, "msg": "deep 数值不对"}
 	]`)
-	rules, err := newRulesWithJson(jsonStr)
+	rules, err := newRulesWithJSON(jsonStr)
 	if err != nil {
 		t.Error(err)
 	}
@@ -57,7 +57,7 @@ func TestRules_Fit2(t *testing.T) {
 	{"op": "=", "key": "Name", "val": "peter", "id": 15},
 	{"op": ">=", "key": "Data.Deep", "val": 1, "id": 17}
 	]`)
-	rules, err := newRulesWithJson(jsonStr)
+	rules, err := newRulesWithJSON(jsonStr)
 	if err != nil {
 		t.Error(err)
 	}
@@ -81,14 +81,14 @@ func TestRules_Fit2(t *testing.T) {
 	t.Log(result)
 }
 
-func TestNewRulesWithJsonAndLogic(t *testing.T) {
+func TestNewRulesWithJSONAndLogic(t *testing.T) {
 	jsonStr := []byte(`[
 	{"op": "@", "key": "Status", "val": "abcd", "id": 13},
 	{"op": "=", "key": "Name", "val": "peter", "id": 15},
 	{"op": ">=", "key": "Data.Deep", "val": 1, "id": 17}
 	]`)
 	logic := "     13       and (15     )"
-	rules, err := NewRulesWithJsonAndLogic(jsonStr, logic)
+	rules, err := NewRulesWithJSONAndLogic(jsonStr, logic)
 	if err != nil {
 		t.Error(err)
 	}
@@ -96,14 +96,14 @@ func TestNewRulesWithJsonAndLogic(t *testing.T) {
 	t.Log(rules.Logic)
 }
 
-func TestNewRulesWithJsonAndLogic2(t *testing.T) {
+func TestNewRulesWithJSONAndLogic2(t *testing.T) {
 	jsonStr := []byte(`[
 	{"op": "@", "key": "Status", "val": "abcd", "id": 13},
 	{"op": "=", "key": "Name", "val": "peter", "id": 15},
 	{"op": ">=", "key": "Data.Deep", "val": 1, "id": 17}
 	]`)
 	logic := "     13    or   (15     )"
-	rules, err := NewRulesWithJsonAndLogic(jsonStr, logic)
+	rules, err := NewRulesWithJSONAndLogic(jsonStr, logic)
 	if err != nil {
 		t.Error(err)
 	}
@@ -111,14 +111,14 @@ func TestNewRulesWithJsonAndLogic2(t *testing.T) {
 	t.Log(rules.Logic)
 }
 
-func TestNewRulesWithJsonAndLogic3(t *testing.T) {
+func TestNewRulesWithJSONAndLogic3(t *testing.T) {
 	jsonStr := []byte(`[
 	{"op": "@", "key": "Status", "val": "abcd", "id": 13},
 	{"op": "=", "key": "Name", "val": "peter", "id": 15},
 	{"op": ">=", "key": "Data.Deep", "val": 1, "id": 17}
 	]`)
 	logic := "     13     and  (15or13    )"
-	rules, err := NewRulesWithJsonAndLogic(jsonStr, logic)
+	rules, err := NewRulesWithJSONAndLogic(jsonStr, logic)
 	if err != nil {
 		t.Error(err)
 	}
@@ -133,7 +133,7 @@ func TestNewRulesWithArrayAndLogic(t *testing.T) {
 	{"op": ">=", "key": "Data.Deep", "val": 1, "id": 17}
 	]`)
 	logic := "     13     and  (15or13    )"
-	rules, err := NewRulesWithJsonAndLogic(jsonStr, logic)
+	rules, err := NewRulesWithJSONAndLogic(jsonStr, logic)
 	if err != nil {
 		t.Error(err)
 	}
@@ -145,7 +145,7 @@ func TestNewRulesWithArrayAndLogic(t *testing.T) {
 	t.Log(rules.Logic)
 }
 
-func TestNewRulesWithJsonAndLogicAndInfo(t *testing.T) {
+func TestNewRulesWithJSONAndLogicAndInfo(t *testing.T) {
 	jsonStr := []byte(`[
 	{"op": "@", "key": "Status", "val": "abcd", "id": 13},
 	{"op": "=", "key": "Name", "val": "peter", "id": 15},
@@ -156,7 +156,7 @@ func TestNewRulesWithJsonAndLogicAndInfo(t *testing.T) {
 		"name": "名称",
 		"msg":  "提示",
 	}
-	rules, err := NewRulesWithJsonAndLogicAndInfo(jsonStr, logic, extractInfo)
+	rules, err := NewRulesWithJSONAndLogicAndInfo(jsonStr, logic, extractInfo)
 	if err != nil {
 		t.Error(err)
 	}
@@ -175,7 +175,7 @@ func TestNewRulesWithArrayAndLogicAndInfo(t *testing.T) {
 		"name": "名称",
 		"msg":  "提示",
 	}
-	rules, err := NewRulesWithJsonAndLogic(jsonStr, logic)
+	rules, err := NewRulesWithJSONAndLogic(jsonStr, logic)
 	if err != nil {
 		t.Error(err)
 	}
@@ -198,7 +198,7 @@ func TestNewRulesSet(t *testing.T) {
 		"name": "",
 		"msg":  "提示",
 	}
-	rules, err := NewRulesWithJsonAndLogic(jsonStr, logic)
+	rules, err := NewRulesWithJSONAndLogic(jsonStr, logic)
 	if err != nil {
 		t.Error(err)
 	}
@@ -222,7 +222,7 @@ func TestRulesSet_FitSetWithMap(t *testing.T) {
 		"name": "",
 		"msg":  "提示",
 	}
-	rules, err := NewRulesWithJsonAndLogicAndInfo(jsonStr, logic, extractInfo)
+	rules, err := NewRulesWithJSONAndLogicAndInfo(jsonStr, logic, extractInfo)
 	if err != nil {
 		t.Error(err)
 	}
@@ -250,7 +250,7 @@ func TestRules_FitWithMap(t *testing.T) {
 		"name": "",
 		"msg":  "提示",
 	}
-	rules, err := NewRulesWithJsonAndLogicAndInfo(jsonStr, logic, extractInfo)
+	rules, err := NewRulesWithJSONAndLogicAndInfo(jsonStr, logic, extractInfo)
 	if err != nil {
 		t.Error(err)
 	}
@@ -270,7 +270,7 @@ func TestRules_FitWithMapAskVal(t *testing.T) {
 		"name": "",
 		"msg":  "提示",
 	}
-	rules, err := NewRulesWithJsonAndLogicAndInfo(jsonStr, logic, extractInfo)
+	rules, err := NewRulesWithJSONAndLogicAndInfo(jsonStr, logic, extractInfo)
 	if err != nil {
 		t.Error(err)
 	}

@@ -1,9 +1,10 @@
-package go_rule_engine
+package ruler
 
 import (
 	"fmt"
-	"github.com/satori/go.uuid"
 	"testing"
+
+	"github.com/satori/go.uuid"
 )
 
 func TestLogicToTree(t *testing.T) {
@@ -21,13 +22,13 @@ func TestSplitExprToChildren2(t *testing.T) {
 
 func TestReplaceBiggestBracketContent3(t *testing.T) {
 	expr := "1 or 2 and 3 or ( 2 and 4 )"
-	result, _ := replaceBiggestBracketContentAtOnce(expr, make(map[string]string, 0))
+	result, _ := replaceBiggestBracketContentAtOnce(expr, make(map[string]string))
 	t.Log(result)
 }
 
 func TestReplaceBiggestBracketContent(t *testing.T) {
 	expr := "( 1 or 2 ) and 3 or ( 2 and 4 )"
-	result, _ := replaceBiggestBracketContentAtOnce(expr, make(map[string]string, 0))
+	result, _ := replaceBiggestBracketContentAtOnce(expr, make(map[string]string))
 	t.Log(result)
 }
 
@@ -47,17 +48,17 @@ func TestReplaceBiggestBracketContent4(t *testing.T) {
 
 func TestReplaceBiggestBracketContent5(t *testing.T) {
 	expr := "1 or 2 and ( 3 or ( 2 and 4 ) )"
-	result, _ := replaceBiggestBracketContentAtOnce(expr, make(map[string]string, 0))
+	result, _ := replaceBiggestBracketContentAtOnce(expr, make(map[string]string))
 	t.Log(result)
 }
 
 func TestLogicToTree2(t *testing.T) {
 	logic := "1 and 2 and ( 3 or not ( 2 and 4 ) )"
 	head := logicToTree(logic)
-	traverseTreeInLayer(head, t)
+	traverseTreeInLayer(head)
 }
 
-func traverseTreeInLayer(head *Node, t *testing.T) {
+func traverseTreeInLayer(head *Node) {
 	var buf []*Node
 	var i int
 	buf = append(buf, head)

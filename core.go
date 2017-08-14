@@ -1,4 +1,4 @@
-package go_rule_engine
+package ruler
 
 import (
 	"encoding/json"
@@ -14,7 +14,7 @@ import (
 
 func injectLogic(rules *Rules, logic string) (*Rules, error) {
 	formatLogic := formatLogicExpression(logic)
-	if formatLogic == " " || formatLogic == "" {
+	if formatLogic == Space || formatLogic == EmptyStr {
 		return rules, nil
 	}
 	// validate the formatLogic string
@@ -50,18 +50,16 @@ func injectExtractInfo(rules *Rules, extractInfo map[string]string) *Rules {
 	return rules
 }
 
-/**
-  RulesSet的构造方法，["name": "规则集的名称", "msg": "规则集的简述"]
-*/
+// NewRulesSet RulesSet的构造方法，["name": "规则集的名称", "msg": "规则集的简述"]
 func NewRulesSet(listRules []*Rules, extractInfo map[string]string) *RulesSet {
 	// check if every rules has name, if not give a index as name
 	for index, rules := range listRules {
-		if rules.Name == "" {
+		if rules.Name == EmptyStr {
 			rules.Name = strconv.Itoa(index + 1)
 		}
 	}
-	name, _ := extractInfo["name"]
-	msg, _ := extractInfo["msg"]
+	name := extractInfo["name"]
+	msg := extractInfo["msg"]
 	return &RulesSet{
 		RulesSet: listRules,
 		Name:     name,
@@ -69,7 +67,7 @@ func NewRulesSet(listRules []*Rules, extractInfo map[string]string) *RulesSet {
 	}
 }
 
-func newRulesWithJson(jsonStr []byte) (*Rules, error) {
+func newRulesWithJSON(jsonStr []byte) (*Rules, error) {
 	var rules []*Rule
 	err := json.Unmarshal(jsonStr, &rules)
 	if err != nil {
@@ -80,16 +78,16 @@ func newRulesWithJson(jsonStr []byte) (*Rules, error) {
 
 func newRulesWithArray(rules []*Rule) *Rules {
 	// give rule an id
-	var maxId = 1
+	var maxID = 1
 	for _, rule := range rules {
-		if rule.Id > maxId {
-			maxId = rule.Id
+		if rule.ID > maxID {
+			maxID = rule.ID
 		}
 	}
 	for index := range rules {
-		if rules[index].Id == 0 {
-			maxId++
-			rules[index].Id = maxId
+		if rules[index].ID == 0 {
+			maxID++
+			rules[index].ID = maxID
 		}
 	}
 	return &Rules{
@@ -97,11 +95,13 @@ func newRulesWithArray(rules []*Rule) *Rules {
 	}
 }
 
+// FitSet RulesSet匹配结构体
 func (rss *RulesSet) FitSet(o interface{}) []string {
 	m := structs.Map(o)
 	return rss.FitSetWithMap(m)
 }
 
+// FitSetWithMap RulesSet匹配Map
 func (rss *RulesSet) FitSetWithMap(o map[string]interface{}) []string {
 	result := make([]string, 0)
 	for _, rules := range rss.RulesSet {
@@ -121,7 +121,7 @@ func (rs *Rules) fitWithMapInFact(o map[string]interface{}) (bool, map[int]strin
 	var tips = make(map[int]string)
 	var values = make(map[int]interface{})
 	var hasLogic = false
-	if rs.Logic != "" {
+	if rs.Logic != EmptyStr {
 		hasLogic = true
 	}
 	for _, rule := range rs.Rules {
@@ -133,13 +133,13 @@ func (rs *Rules) fitWithMapInFact(o map[string]interface{}) (bool, map[int]strin
 				return false, nil, nil
 			}
 		}
-		values[rule.Id] = v
+		values[rule.ID] = v
 
 		flag := rule.fit(v)
-		results[rule.Id] = flag
+		results[rule.ID] = flag
 		if !flag {
 			// fit false, record msg, for no logic expression usage
-			tips[rule.Id] = rule.Msg
+			tips[rule.ID] = rule.Msg
 		}
 	}
 	// compute result by considering logic
@@ -150,24 +150,21 @@ func (rs *Rules) fitWithMapInFact(o map[string]interface{}) (bool, map[int]strin
 			}
 		}
 		return true, nil, values
-	} else {
-		// this use reverse_polish_notation
-		//answer, err := rs.calculateExpression(rs.Logic, results)
-		answer, unfitRuleIDs, err := rs.calculateExpressionByTree(results)
-		// tree can return fail reasons in fact
-		tips = rs.getFailTipsByRuleIDs(unfitRuleIDs)
-		if err != nil {
-			return false, nil, values
-		}
-		return answer, tips, values
 	}
+	answer, unfitRuleIDs, err := rs.calculateExpressionByTree(results)
+	// tree can return fail reasons in fact
+	tips = rs.getFailTipsByRuleIDs(unfitRuleIDs)
+	if err != nil {
+		return false, nil, values
+	}
+	return answer, tips, values
 }
 
 func (rs *Rules) getFailTipsByRuleIDs(unfitIDs []int) map[int]string {
-	var failTips = make(map[int]string, 0)
-	var allTips = make(map[int]string, 0)
+	var failTips = make(map[int]string)
+	var allTips = make(map[int]string)
 	for _, rule := range rs.Rules {
-		allTips[rule.Id] = rule.Msg
+		allTips[rule.ID] = rule.Msg
 	}
 	for _, id := range unfitIDs {
 		failTips[id] = allTips[id]
@@ -266,12 +263,10 @@ func (r *Rule) fit(v interface{}) bool {
 	default:
 		return false
 	}
-
-	return false
 }
 
 func pluck(key string, o map[string]interface{}) interface{} {
-	if o == nil || key == "" {
+	if o == nil || key == EmptyStr {
 		return nil
 	}
 	paths := strings.Split(key, ".")
@@ -314,7 +309,7 @@ func formatNumber(v interface{}) float64 {
 	case float32:
 		return float64(t)
 	case float64:
-		return float64(t)
+		return t
 	default:
 		return 0
 	}
@@ -329,38 +324,40 @@ func checkRegex(pattern, o string) bool {
 }
 
 func formatLogicExpression(strRawExpr string) string {
-	flagPre := ""
-	flagNow := ""
-	runesOrigin := []rune(strings.ToLower(strRawExpr))
+	var flagPre, flagNow string
+	strBracket := "bracket"
+	strSpace := "space"
+	strNotSpace := "notSpace"
+	strOrigin := strings.ToLower(strRawExpr)
 	runesPretty := make([]rune, 0)
-	for _, c := range runesOrigin {
-		if c <= []rune("9")[0] && c >= []rune("0")[0] {
+
+	for _, c := range strOrigin {
+		if c <= '9' && c >= '0' {
 			flagNow = "num"
-		} else if c <= []rune("z")[0] && c >= []rune("a")[0] {
+		} else if c <= 'z' && c >= 'a' {
 			flagNow = "char"
-		} else if c == []rune("(")[0] || c == []rune(")")[0] {
-			flagNow = "bracket"
+		} else if c == '(' || c == ')' {
+			flagNow = strBracket
 		} else {
 			flagNow = flagPre
 		}
-		if flagNow != flagPre || flagNow == "bracket" && flagPre == "bracket" {
+		if flagNow != flagPre || flagNow == strBracket && flagPre == strBracket {
 			// should insert space here
-			runesPretty = append(runesPretty, []rune(" ")[0])
+			runesPretty = append(runesPretty, []rune(Space)[0])
 		}
 		runesPretty = append(runesPretty, c)
 		flagPre = flagNow
 	}
 	// remove redundant space
-	flagPre = "notSpace"
-	flagNow = ""
+	flagPre = strNotSpace
 	runesTrim := make([]rune, 0)
 	for _, c := range runesPretty {
-		if c == []rune(" ")[0] {
-			flagNow = "space"
+		if c == []rune(Space)[0] {
+			flagNow = strSpace
 		} else {
-			flagNow = "notSpace"
+			flagNow = strNotSpace
 		}
-		if flagNow == "space" && flagPre == "space" {
+		if flagNow == strSpace && flagPre == strSpace {
 			// continuous space
 			continue
 		} else {
@@ -369,17 +366,16 @@ func formatLogicExpression(strRawExpr string) string {
 		flagPre = flagNow
 	}
 	strPrettyTrim := string(runesTrim)
-	strPrettyTrim = strings.Trim(strPrettyTrim, " ")
+	strPrettyTrim = strings.Trim(strPrettyTrim, Space)
 
 	return strPrettyTrim
 }
 
 func isFormatLogicExpressionAllValidSymbol(strFormatLogic string) bool {
-	listSymbol := strings.Split(strFormatLogic, " ")
+	listSymbol := strings.Split(strFormatLogic, Space)
 	for _, symbol := range listSymbol {
 		flag := false
-		pattern := "^\\d*$"
-		regex, err := regexp.Compile(pattern)
+		regex, err := regexp.Compile(PatternNumber)
 		if err != nil {
 			return false
 		}
@@ -387,7 +383,7 @@ func isFormatLogicExpressionAllValidSymbol(strFormatLogic string) bool {
 			// is number ok
 			continue
 		}
-		for _, op := range VALID_OPERATORS {
+		for _, op := range ValidOperators {
 			if op == symbol {
 				// is operator ok
 				flag = true
@@ -409,11 +405,10 @@ func isFormatLogicExpressionAllValidSymbol(strFormatLogic string) bool {
 func isFormatLogicExpressionAllIdsExist(strFormatLogic string, rules *Rules) bool {
 	mapExistIds := make(map[string]bool)
 	for _, eachRule := range rules.Rules {
-		mapExistIds[strconv.Itoa(eachRule.Id)] = true
+		mapExistIds[strconv.Itoa(eachRule.ID)] = true
 	}
-	listSymbol := strings.Split(strFormatLogic, " ")
-	pattern := "^\\d*$"
-	regex, err := regexp.Compile(pattern)
+	listSymbol := strings.Split(strFormatLogic, Space)
+	regex, err := regexp.Compile(PatternNumber)
 	if err != nil {
 		return false
 	}
@@ -431,9 +426,8 @@ func isFormatLogicExpressionAllIdsExist(strFormatLogic string, rules *Rules) boo
 }
 
 func tryToCalculateResultByFormatLogicExpressionWithRandomProbe(strFormatLogic string) error {
-	listSymbol := strings.Split(strFormatLogic, " ")
-	pattern := "^\\d*$"
-	regex, err := regexp.Compile(pattern)
+	listSymbol := strings.Split(strFormatLogic, Space)
+	regex, err := regexp.Compile(PatternNumber)
 	if err != nil {
 		return err
 	}
@@ -441,9 +435,9 @@ func tryToCalculateResultByFormatLogicExpressionWithRandomProbe(strFormatLogic s
 	mapProbe := make(map[int]bool)
 	for _, symbol := range listSymbol {
 		if regex.MatchString(symbol) {
-			id, err := strconv.Atoi(symbol)
-			if err != nil {
-				return err
+			id, iErr := strconv.Atoi(symbol)
+			if iErr != nil {
+				return iErr
 			}
 			randomInt := rand.Intn(10)
 			randomBool := randomInt < 5
@@ -453,10 +447,7 @@ func tryToCalculateResultByFormatLogicExpressionWithRandomProbe(strFormatLogic s
 	// calculate still use reverse_polish_notation
 	r := &Rules{}
 	_, err = r.calculateExpression(strFormatLogic, mapProbe)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func numOfOperandInLogic(op string) int8 {
