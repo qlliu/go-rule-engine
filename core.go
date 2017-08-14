@@ -3,12 +3,13 @@ package go_rule_engine
 import (
 	"encoding/json"
 	"errors"
-	"github.com/fatih/structs"
 	"math/rand"
 	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/fatih/structs"
 )
 
 func injectLogic(rules *Rules, logic string) (*Rules, error) {
@@ -68,77 +69,16 @@ func NewRulesSet(listRules []*Rules, extractInfo map[string]string) *RulesSet {
 	}
 }
 
-/**
-  用json串构造Rules的完全方法，logic表达式如果没有则传空字符串, ["name": "规则名称", "msg": "规则不符合的提示"]
-*/
-func NewRulesWithJsonAndLogicAndInfo(jsonStr []byte, logic string, extractInfo map[string]string) (*Rules, error) {
-	rulesObj, err := NewRulesWithJsonAndLogic(jsonStr, logic)
-	if err != nil {
-		return nil, err
-	}
-	return injectExtractInfo(rulesObj, extractInfo), nil
-}
-
-/**
-  用rule数组构造Rules的完全方法，logic表达式如果没有则传空字符串, ["name": "规则名称", "msg": "规则不符合的提示"]
-*/
-func NewRulesWithArrayAndLogicAndInfo(rules []*Rule, logic string, extractInfo map[string]string) (*Rules, error) {
-	rulesObj, err := NewRulesWithArrayAndLogic(rules, logic)
-	if err != nil {
-		return nil, err
-	}
-	return injectExtractInfo(rulesObj, extractInfo), nil
-}
-
-/**
-  用json串构造Rules的标准方法，logic表达式如果没有则传空字符串
-*/
-func NewRulesWithJsonAndLogic(jsonStr []byte, logic string) (*Rules, error) {
-	if logic == "" {
-		// empty logic
-		return NewRulesWithJson(jsonStr)
-	}
-	rulesObj, err := NewRulesWithJson(jsonStr)
-	if err != nil {
-		return nil, err
-	}
-	rulesObj, err = injectLogic(rulesObj, logic)
-	if err != nil {
-		return nil, err
-	}
-
-	return rulesObj, nil
-}
-
-/**
-  用rule数组构造Rules的标准方法，logic表达式如果没有则传空字符串
-*/
-func NewRulesWithArrayAndLogic(rules []*Rule, logic string) (*Rules, error) {
-	if logic == "" {
-		// empty logic
-		return NewRulesWithArray(rules), nil
-	}
-	rulesObj := NewRulesWithArray(rules)
-	rulesObj, err := injectLogic(rulesObj, logic)
-	if err != nil {
-		return nil, err
-	}
-
-	return rulesObj, nil
-}
-
-// Deprecated: 没有考虑logic表达式校验的构造方法
-func NewRulesWithJson(jsonStr []byte) (*Rules, error) {
+func newRulesWithJson(jsonStr []byte) (*Rules, error) {
 	var rules []*Rule
 	err := json.Unmarshal(jsonStr, &rules)
 	if err != nil {
 		return nil, err
 	}
-	return NewRulesWithArray(rules), nil
+	return newRulesWithArray(rules), nil
 }
 
-// Deprecated: 没有考虑logic表达式校验的构造方法
-func NewRulesWithArray(rules []*Rule) *Rules {
+func newRulesWithArray(rules []*Rule) *Rules {
 	// give rule an id
 	var maxId = 1
 	for _, rule := range rules {
@@ -176,25 +116,6 @@ func (rss *RulesSet) FitSetWithMap(o map[string]interface{}) []string {
 	return result
 }
 
-func (rs *Rules) Fit(o interface{}) (bool, map[int]string) {
-	m := structs.Map(o)
-	return rs.FitWithMap(m)
-}
-
-func (rs *Rules) FitWithMap(o map[string]interface{}) (bool, map[int]string) {
-	fit, tips, _ := rs.fitWithMapInFact(o)
-	return fit, tips
-}
-
-func (rs *Rules) FitAskVal(o interface{}) (bool, map[int]string, map[int]interface{}) {
-	m := structs.Map(o)
-	return rs.FitWithMapAskVal(m)
-}
-
-func (rs *Rules) FitWithMapAskVal(o map[string]interface{}) (bool, map[int]string, map[int]interface{}) {
-	return rs.fitWithMapInFact(o)
-}
-
 func (rs *Rules) fitWithMapInFact(o map[string]interface{}) (bool, map[int]string, map[int]interface{}) {
 	var results = make(map[int]bool)
 	var tips = make(map[int]string)
@@ -217,7 +138,7 @@ func (rs *Rules) fitWithMapInFact(o map[string]interface{}) (bool, map[int]strin
 		flag := rule.fit(v)
 		results[rule.Id] = flag
 		if !flag {
-			// unfit, record msg
+			// fit false, record msg, for no logic expression usage
 			tips[rule.Id] = rule.Msg
 		}
 	}
@@ -230,12 +151,28 @@ func (rs *Rules) fitWithMapInFact(o map[string]interface{}) (bool, map[int]strin
 		}
 		return true, nil, values
 	} else {
-		answer, err := rs.calculateExpression(rs.Logic, results)
+		// this use reverse_polish_notation
+		//answer, err := rs.calculateExpression(rs.Logic, results)
+		answer, unfitRuleIDs, err := rs.calculateExpressionByTree(results)
+		// tree can return fail reasons in fact
+		tips = rs.getFailTipsByRuleIDs(unfitRuleIDs)
 		if err != nil {
 			return false, nil, values
 		}
 		return answer, tips, values
 	}
+}
+
+func (rs *Rules) getFailTipsByRuleIDs(unfitIDs []int) map[int]string {
+	var failTips = make(map[int]string, 0)
+	var allTips = make(map[int]string, 0)
+	for _, rule := range rs.Rules {
+		allTips[rule.Id] = rule.Msg
+	}
+	for _, id := range unfitIDs {
+		failTips[id] = allTips[id]
+	}
+	return failTips
 }
 
 func (r *Rule) fit(v interface{}) bool {
@@ -513,11 +450,29 @@ func tryToCalculateResultByFormatLogicExpressionWithRandomProbe(strFormatLogic s
 			mapProbe[id] = randomBool
 		}
 	}
-	// calculate
+	// calculate still use reverse_polish_notation
 	r := &Rules{}
 	_, err = r.calculateExpression(strFormatLogic, mapProbe)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func numOfOperandInLogic(op string) int8 {
+	mapOperand := map[string]int8{"or": 2, "and": 2, "not": 1}
+	return mapOperand[op]
+}
+
+func computeOneInLogic(op string, v []bool) (bool, error) {
+	switch op {
+	case "or":
+		return v[0] || v[1], nil
+	case "and":
+		return v[0] && v[1], nil
+	case "not":
+		return !v[0], nil
+	default:
+		return false, errors.New("unrecognized op")
+	}
 }

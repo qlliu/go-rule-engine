@@ -162,7 +162,7 @@ func (*Rules) calculateExpression(expr string, values map[int]bool) (bool, error
 		stackNum.Remove(stackNum.Front())
 	}
 
-	if stackOp.Back() == nil {
+	if stackOp.Back() == nil || stackOp.Len() != 1 {
 		return false, errors.New("error expression to calculate: " + expr)
 	}
 	result, ok := stackOp.Back().Value.(bool)
@@ -181,22 +181,4 @@ func isOpBiggerInLogic(obj, base string) bool {
 	}
 	mapPriority := map[string]int8{"or": 2, "and": 3, "not": 5, "(": 0, ")": 1}
 	return mapPriority[obj] > mapPriority[base]
-}
-
-func numOfOperandInLogic(op string) int8 {
-	mapOperand := map[string]int8{"or": 2, "and": 2, "not": 1}
-	return mapOperand[op]
-}
-
-func computeOneInLogic(op string, v []bool) (bool, error) {
-	switch op {
-	case "or":
-		return v[0] || v[1], nil
-	case "and":
-		return v[0] && v[1], nil
-	case "not":
-		return !v[0], nil
-	default:
-		return false, errors.New("unrecognized op")
-	}
 }
