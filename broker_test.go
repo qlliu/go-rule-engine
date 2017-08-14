@@ -29,7 +29,7 @@ func TestRules_Fit3(t *testing.T) {
 		C: 3,
 	}
 	fit, msg := rs.Fit(o)
-	t.Log(fit)
+	assert.False(t, fit)
 	t.Log(msg)
 }
 
@@ -55,7 +55,7 @@ func TestRules_Fit4(t *testing.T) {
 		C: 3,
 	}
 	fit, msg := rs.Fit(o)
-	t.Log(fit)
+	assert.True(t, fit)
 	t.Log(msg)
 
 	head := logicToTree(logic)

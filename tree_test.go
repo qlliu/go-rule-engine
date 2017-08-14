@@ -4,32 +4,29 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/satori/go.uuid"
+	"github.com/docker/docker/pkg/testutil/assert"
 )
 
 func TestLogicToTree(t *testing.T) {
 	logic := "1 or 2"
 	head := logicToTree(logic)
 	t.Log(head)
-}
-
-func TestSplitExprToChildren2(t *testing.T) {
-	uuid1 := uuid.NewV1()
-	t.Log(uuid1)
-	uuid4 := uuid.NewV4()
-	t.Log(uuid4)
+	assert.NotNil(t, head)
+	assert.Equal(t, "1 or 2", head.Expr)
 }
 
 func TestReplaceBiggestBracketContent3(t *testing.T) {
 	expr := "1 or 2 and 3 or ( 2 and 4 )"
 	result, _ := replaceBiggestBracketContentAtOnce(expr, make(map[string]string))
 	t.Log(result)
+	assert.Contains(t, result, "1 or 2 and 3")
 }
 
 func TestReplaceBiggestBracketContent(t *testing.T) {
 	expr := "( 1 or 2 ) and 3 or ( 2 and 4 )"
 	result, _ := replaceBiggestBracketContentAtOnce(expr, make(map[string]string))
 	t.Log(result)
+	assert.Contains(t, result, "3 or ( 2 and 4 )")
 }
 
 func TestReplaceBiggestBracketContent2(t *testing.T) {
@@ -37,6 +34,7 @@ func TestReplaceBiggestBracketContent2(t *testing.T) {
 	result, mapReplace := replaceBiggestBracketContent(expr)
 	t.Log(result)
 	t.Log(mapReplace)
+	assert.Contains(t, result, "and 3 or")
 }
 
 func TestReplaceBiggestBracketContent4(t *testing.T) {
@@ -44,18 +42,21 @@ func TestReplaceBiggestBracketContent4(t *testing.T) {
 	result, mapReplace := replaceBiggestBracketContent(expr)
 	t.Log(result)
 	t.Log(mapReplace)
+	assert.Contains(t, result, "and")
 }
 
 func TestReplaceBiggestBracketContent5(t *testing.T) {
 	expr := "1 or 2 and ( 3 or ( 2 and 4 ) )"
 	result, _ := replaceBiggestBracketContentAtOnce(expr, make(map[string]string))
 	t.Log(result)
+	assert.Contains(t, result, "1 or 2 and")
 }
 
 func TestLogicToTree2(t *testing.T) {
 	logic := "1 and 2 and ( 3 or not ( 2 and 4 ) )"
 	head := logicToTree(logic)
 	traverseTreeInLayer(head)
+	assert.NotNil(t, head)
 }
 
 func traverseTreeInLayer(head *Node) {
@@ -93,4 +94,5 @@ func TestLogicToTree3(t *testing.T) {
 	logic := "1 and 2 and ( 3 or not ( 2 and 4 ) )"
 	head := logicToTree(logic)
 	traverseTreeInPostOrder(head)
+	assert.NotNil(t, head)
 }
