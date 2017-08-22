@@ -486,11 +486,11 @@ func computeOneInLogic(op string, v []bool) (bool, error) {
 
 func isIn(needle, haystack string, isNeedleNum bool) bool {
 	// compatible to "1, 2, 3" and "1,2,3"
-	trimHaystack := strings.Replace(haystack, " ", "", -1)
-	li := strings.Split(trimHaystack, ",")
+	li := strings.Split(haystack, ",")
 	for _, o := range li {
+		trimO := strings.TrimLeft(o, " ")
 		if isNeedleNum {
-			oNum, err := strconv.ParseFloat(o, 64)
+			oNum, err := strconv.ParseFloat(trimO, 64)
 			if err != nil {
 				continue
 			}
@@ -502,7 +502,7 @@ func isIn(needle, haystack string, isNeedleNum bool) bool {
 				// 考虑浮点精度问题
 				return true
 			}
-		} else if needle == o {
+		} else if needle == trimO {
 			return true
 		}
 	}

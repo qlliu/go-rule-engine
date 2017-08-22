@@ -125,7 +125,8 @@ func TestRules_Fit7(t *testing.T) {
 	{"op": "!@", "key": "D", "val": "11, 2, 3, 1", "id": 4, "msg": "error 4"},
 	{"op": "@", "key": "E", "val": "11, 2, 3, 1,  88.1", "id": 5, "msg": "error 5"},
 	{"op": "@", "key": "F", "val": "11, 2, 3, 1,  88.1", "id": 6, "msg": "error 6"},
-	{"op": "@", "key": "G", "val": "11, 2, 3, 1,  88.1, 0.001", "id": 7, "msg": "error 7"}
+	{"op": "@", "key": "G", "val": "11, 2, 3, 1,  88.1, 0.001", "id": 7, "msg": "error 7"},
+	{"op": "@", "key": "H", "val": "11, 2, 3, 1,  88.1, 0.001,    ab c", "id": 8, "msg": "error 8"}
 	]`)
 	r, err := NewRulesWithJSONAndLogic(jsonIn, "")
 	if err != nil {
@@ -141,6 +142,7 @@ func TestRules_Fit7(t *testing.T) {
 		E float32
 		F float64
 		G float64
+		H string
 	}
 	o := &obj{
 		A: "3",
@@ -150,6 +152,7 @@ func TestRules_Fit7(t *testing.T) {
 		E: 88.1,
 		F: 88.12,
 		G: 1e-3,
+		H: "ab c",
 	}
 	fit, msg := r.Fit(o)
 	t.Logf("result: %v", fit)
