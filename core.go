@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"math"
+
 	"github.com/fatih/structs"
 )
 
@@ -179,25 +181,39 @@ func (r *Rule) fit(v interface{}) bool {
 	// index-0 actual, index-1 expect
 	var pairStr = make([]string, 2)
 	var pairNum = make([]float64, 2)
-	var isStr, isNum bool
+	var isStr, isNum, isObjStr, isRuleStr bool
 	pairStr[0], ok = v.(string)
 	if !ok {
 		pairNum[0] = formatNumber(v)
 		isStr = false
 		isNum = true
+		isObjStr = false
 	} else {
 		isStr = true
 		isNum = false
+		isObjStr = true
 	}
 	pairStr[1], ok = r.Val.(string)
 	if !ok {
 		pairNum[1] = formatNumber(r.Val)
 		isStr = false
+		isRuleStr = false
 	} else {
 		isNum = false
+		isRuleStr = true
 	}
-	// if types different
-	if !isStr && !isNum {
+
+	var flagOpIn bool
+	// if in || nin
+	if op == "@" || op == "in" || op == "!@" || op == "nin" {
+		flagOpIn = true
+		if !isObjStr && isRuleStr {
+			pairStr[0] = strconv.FormatFloat(pairNum[0], 'f', -1, 64)
+		}
+	}
+
+	// if types different, ignore in & nin
+	if !isStr && !isNum && !flagOpIn {
 		return false
 	}
 
@@ -250,10 +266,10 @@ func (r *Rule) fit(v interface{}) bool {
 			return pairStr[0] != pairStr[1]
 		}
 		return false
-	case "@", "contain":
-		return checkRegex(pairStr[1], pairStr[0])
-	case "!@", "ncontain":
-		return !checkRegex(pairStr[1], pairStr[0])
+	case "@", "in":
+		return isIn(pairStr[0], pairStr[1], !isObjStr)
+	case "!@", "nin":
+		return !isIn(pairStr[0], pairStr[1], !isObjStr)
 	case "^$", "regex":
 		return checkRegex(pairStr[1], pairStr[0])
 	case "0", "empty":
@@ -466,4 +482,33 @@ func computeOneInLogic(op string, v []bool) (bool, error) {
 	default:
 		return false, errors.New("unrecognized op")
 	}
+}
+
+func isIn(needle, haystack string, isNeedleNum bool) bool {
+	// get number of needle
+	var iNum float64
+	var err error
+	if isNeedleNum {
+		if iNum, err = strconv.ParseFloat(needle, 64); err != nil {
+			return false
+		}
+	}
+	// compatible to "1, 2, 3" and "1,2,3"
+	li := strings.Split(haystack, ",")
+	for _, o := range li {
+		trimO := strings.TrimLeft(o, " ")
+		if isNeedleNum {
+			oNum, err := strconv.ParseFloat(trimO, 64)
+			if err != nil {
+				continue
+			}
+			if math.Abs(iNum-oNum) < 1E-5 {
+				// 考虑浮点精度问题
+				return true
+			}
+		} else if needle == trimO {
+			return true
+		}
+	}
+	return false
 }
