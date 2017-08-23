@@ -116,3 +116,47 @@ func TestRules_Fit6(t *testing.T) {
 	assert.False(t, fit)
 	assert.Equal(t, "需要带看在上架6h以后", msg[3])
 }
+
+func TestRules_Fit7(t *testing.T) {
+	var jsonIn = []byte(`[
+	{"op": "@", "key": "A", "val": "11, 2, 3, 1", "id": 1, "msg": "error 1"},
+	{"op": "!@", "key": "B", "val": "11, 2, 3, 1", "id": 2, "msg": "error 2"},
+	{"op": "@", "key": "C", "val": "11, 2, 3, 1", "id": 3, "msg": "error 3"},
+	{"op": "!@", "key": "D", "val": "11, 2, 3, 1", "id": 4, "msg": "error 4"},
+	{"op": "@", "key": "E", "val": "11, 2, 3, 1,  88.1", "id": 5, "msg": "error 5"},
+	{"op": "@", "key": "F", "val": "11, 2, 3, 1,  88.1", "id": 6, "msg": "error 6"},
+	{"op": "@", "key": "G", "val": "11, 2, 3, 1,  88.1, 0.001", "id": 7, "msg": "error 7"},
+	{"op": "@", "key": "H", "val": "11, 2, 3, 1,  88.1, 0.001,    ab c", "id": 8, "msg": "error 8"}
+	]`)
+	r, err := NewRulesWithJSONAndLogic(jsonIn, "")
+	if err != nil {
+		t.Error(err)
+	}
+
+	// to fit
+	type obj struct {
+		A string
+		B string
+		C int
+		D int32
+		E float32
+		F float64
+		G float64
+		H string
+	}
+	o := &obj{
+		A: "3",
+		B: "4",
+		C: 1,
+		D: 8,
+		E: 88.1,
+		F: 88.12,
+		G: 1e-3,
+		H: "ab c",
+	}
+	fit, msg := r.Fit(o)
+	t.Logf("result: %v", fit)
+	t.Logf("msg: %+v", msg)
+	assert.False(t, fit)
+	assert.Equal(t, "error 6", msg[6])
+}
