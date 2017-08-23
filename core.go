@@ -485,16 +485,20 @@ func computeOneInLogic(op string, v []bool) (bool, error) {
 }
 
 func isIn(needle, haystack string, isNeedleNum bool) bool {
+	// get number of needle
+	var iNum float64
+	var err error
+	if isNeedleNum {
+		if iNum, err = strconv.ParseFloat(needle, 64); err != nil {
+			return false
+		}
+	}
 	// compatible to "1, 2, 3" and "1,2,3"
 	li := strings.Split(haystack, ",")
 	for _, o := range li {
 		trimO := strings.TrimLeft(o, " ")
 		if isNeedleNum {
 			oNum, err := strconv.ParseFloat(trimO, 64)
-			if err != nil {
-				continue
-			}
-			iNum, err := strconv.ParseFloat(needle, 64)
 			if err != nil {
 				continue
 			}
