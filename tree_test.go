@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/docker/docker/pkg/testutil/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestLogicToTree(t *testing.T) {
