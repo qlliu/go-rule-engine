@@ -1,6 +1,13 @@
 package ruler
 
-import "github.com/fatih/structs"
+import (
+	"errors"
+	"regexp"
+	"strconv"
+	"strings"
+
+	"github.com/fatih/structs"
+)
 
 // NewRulesWithJSONAndLogicAndInfo 用json串构造Rules的完全方法，logic表达式如果没有则传空字符串, ["name": "规则名称", "msg": "规则不符合的提示"]
 func NewRulesWithJSONAndLogicAndInfo(jsonStr []byte, logic string, extractInfo map[string]string) (*Rules, error) {
@@ -74,4 +81,40 @@ func (rs *Rules) FitAskVal(o interface{}) (bool, map[int]string, map[int]interfa
 // FitWithMapAskVal Rules匹配map，同时返回所有子规则key值
 func (rs *Rules) FitWithMapAskVal(o map[string]interface{}) (bool, map[int]string, map[int]interface{}) {
 	return rs.fitWithMapInFact(o)
+}
+
+// GetRuleIDsByLogicExpression 根据逻辑表达式得到规则id列表
+func GetRuleIDsByLogicExpression(logic string) ([]int, error) {
+	var result []int
+	formatLogic := formatLogicExpression(logic)
+	if formatLogic == Space || formatLogic == EmptyStr {
+		return nil, nil
+	}
+	// validate the formatLogic string
+	// 1. only contain legal symbol
+	isValidSymbol := isFormatLogicExpressionAllValidSymbol(formatLogic)
+	if !isValidSymbol {
+		return nil, errors.New("invalid logic expression: invalid symbol")
+	}
+
+	// 2. check logic expression by trying to  calculate result with random bool
+	err := tryToCalculateResultByFormatLogicExpressionWithRandomProbe(formatLogic)
+	if err != nil {
+		return nil, errors.New("invalid logic expression: can not calculate")
+	}
+
+	// return rule id list
+	listSymbol := strings.Split(formatLogic, Space)
+	regex := regexp.MustCompile(PatternNumber)
+	for _, symbol := range listSymbol {
+		if regex.MatchString(symbol) {
+			// is id, check it
+			id, err := strconv.Atoi(symbol)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, id)
+		}
+	}
+	return result, nil
 }
