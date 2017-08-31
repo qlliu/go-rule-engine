@@ -8,28 +8,47 @@ import (
 )
 
 func TestRules_Fit3(t *testing.T) {
+	// build rules
 	jsonRules := []byte(`[
-	{"op": "=", "key": "A", "val": 3, "id": 1, "msg": "A fail"},
-	{"op": ">", "key": "B", "val": 1, "id": 2, "msg": "B fail"},
-	{"op": "<", "key": "C", "val": 5, "id": 3, "msg": "C fail"}
+	{"op": "=", "key": "Grade", "val": 3, "id": 1, "msg": "Grade not match"},
+	{"op": "=", "key": "Sex", "val": "male", "id": 2, "msg": "not male"},
+	{"op": ">=", "key": "Score.Math", "val": 90, "id": 3, "msg": "Math not so well"},
+	{"op": ">=", "key": "Score.Physic", "val": 90, "id": 4, "msg": "Physic not so well"}
 	]`)
-	logic := "1 and 2 and ( not (1 or 2) or not 3)"
-	rs, err := NewRulesWithJSONAndLogic(jsonRules, logic)
+	logic := "1 and not 2 and (3 or 4)"
+	ruleToFit, err := NewRulesWithJSONAndLogic(jsonRules, logic)
 	if err != nil {
 		t.Error(err)
 	}
-	type Obj struct {
-		A int
-		B int
-		C int
+
+	// prepare obj
+	type Exams struct {
+		Math   int
+		Physic int
 	}
-	o := &Obj{
-		A: 3,
-		B: 3,
-		C: 3,
+	type Student struct {
+		Name  string
+		Grade int
+		Sex   string
+		Score *Exams
 	}
-	fit, msg := rs.Fit(o)
+	//Chris := &Student{
+	//	Name: "Chris",
+	//	Grade: 3,
+	//	Sex: "female",
+	//	Score: &Exams{Math: 88, Physic: 91},
+	//}
+	Helen := &Student{
+		Name:  "Helen",
+		Grade: 4,
+		Sex:   "female",
+		Score: &Exams{Math: 96, Physic: 93},
+	}
+
+	// fit
+	fit, msg := ruleToFit.Fit(Helen)
 	assert.False(t, fit)
+	t.Log(fit)
 	t.Log(msg)
 }
 
