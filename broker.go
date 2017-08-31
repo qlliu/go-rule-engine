@@ -104,6 +104,7 @@ func GetRuleIDsByLogicExpression(logic string) ([]int, error) {
 	}
 
 	// return rule id list
+	var mapGot = make(map[int]bool)
 	listSymbol := strings.Split(formatLogic, Space)
 	regex := regexp.MustCompile(PatternNumber)
 	for _, symbol := range listSymbol {
@@ -113,7 +114,11 @@ func GetRuleIDsByLogicExpression(logic string) ([]int, error) {
 			if err != nil {
 				return nil, err
 			}
-			result = append(result, id)
+			// keep unique
+			if _, ok := mapGot[id]; !ok {
+				result = append(result, id)
+				mapGot[id] = true
+			}
 		}
 	}
 	return result, nil

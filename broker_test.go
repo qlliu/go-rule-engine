@@ -162,7 +162,7 @@ func TestRules_Fit7(t *testing.T) {
 }
 
 func TestGetRuleIDsByLogicExpression(t *testing.T) {
-	logic := "1 and (2 or (4or not5))"
+	logic := "1 and (2 or (4or not5and2or1))"
 	ids, err := GetRuleIDsByLogicExpression(logic)
 	if err != nil {
 		t.Error(err)
