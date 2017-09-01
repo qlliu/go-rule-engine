@@ -67,10 +67,11 @@ go-rule-engine是用Golang实现的小型规则引擎，可以使用json串构�
 
 ### 概念
 
-1. 子规则Rule
+##### 子规则Rule
 
 ```go
-{"op": "=", "key": "Grade", "val": 3, "id": 1, "msg": "Grade not match"}
+// key支持链式表达
+{"op": ">=", "key": "Score.Physic", "val": 90, "id": 4, "msg": "Physic not so well"}
 
 // Rule 最小单元，子规则
 type Rule struct {
@@ -82,13 +83,14 @@ type Rule struct {
 }
 ```
 
-2. 逻辑表达式logic
+##### 逻辑表达式logic
 
 ```go
-"1 and 2 and (3 or 4)"   // 数字是rule的ID，当需要所有rule都为true，可以缺省写法：logic=""
+// 数字是rule的ID，当需要所有rule都为true，可以缺省写法：logic=""
+"1 and not 2 and (3 or 4)"
 ```
 
-3. 规则Rules
+##### 规则Rules
 
 ```go
 // 即创建的ruleToFit对象
@@ -103,7 +105,7 @@ type Rules struct {
 }
 ```
 
-4. 匹配结果Fit
+##### 匹配结果Fit
 
 ```go
 fit, msg := ruleToFit.Fit(Chris)
@@ -112,7 +114,7 @@ t.Log(fit)
 false
 ```
 
-5. 不匹配原因msg
+##### 不匹配原因msg
 
 ```go
 fit, msg := ruleToFit.Fit(Chris)
