@@ -13,10 +13,10 @@ import (
 /**
   利用树来计算规则引擎
   输入：子规则ID和逻辑值map
-  输出：规则匹配结果，导致匹配false的子规则ID
+  输出：规则匹配结果，导致匹配false的子规则ID/导致true的IDs
 */
 func (rs *Rules) calculateExpressionByTree(values map[int]bool) (bool, []int, error) {
-	var unfitIDs []int
+	var ruleIDs []int
 	head := logicToTree(rs.Logic)
 	err := head.traverseTreeInPostOrderForCalculate(values)
 	if err != nil {
@@ -27,12 +27,18 @@ func (rs *Rules) calculateExpressionByTree(values map[int]bool) (bool, []int, er
 	}
 	if !head.Val {
 		// fail了需要找原因
-		unfitIDs, err = head.traverseTreeInLayerToFindFailRule(unfitIDs)
+		ruleIDs, err = head.traverseTreeInLayerToFindFailRule(ruleIDs)
+		if err != nil {
+			return false, nil, err
+		}
+	} else {
+		// true也返回相应的ruleIDs
+		ruleIDs, err = head.traverseTreeInLayerToFindSuccessRule(ruleIDs)
 		if err != nil {
 			return false, nil, err
 		}
 	}
-	return head.Val, unfitIDs, nil
+	return head.Val, ruleIDs, nil
 }
 
 /**
@@ -103,7 +109,7 @@ func (node *Node) traverseTreeInPostOrderForCalculate(values map[int]bool) error
 /**
   层序遍历获取导致树顶false的叶子节点
 */
-func (node *Node) traverseTreeInLayerToFindFailRule(unfitIDs []int) ([]int, error) {
+func (node *Node) traverseTreeInLayerToFindFailRule(ids []int) ([]int, error) {
 	var buf []*Node
 	var i int
 	buf = append(buf, node)
@@ -116,8 +122,8 @@ func (node *Node) traverseTreeInLayerToFindFailRule(unfitIDs []int) ([]int, erro
 					if err != nil {
 						return nil, err
 					}
-					unfitIDs = append(unfitIDs, ruleID)
-					return unfitIDs, nil
+					ids = append(ids, ruleID)
+					return ids, nil
 				}
 			}
 			if buf[i].Children != nil {
@@ -132,11 +138,45 @@ func (node *Node) traverseTreeInLayerToFindFailRule(unfitIDs []int) ([]int, erro
 			break
 		}
 	}
-	return unfitIDs, nil
+	return ids, nil
+}
+
+/**
+  层序遍历获取导致树顶true的叶子节点
+*/
+func (node *Node) traverseTreeInLayerToFindSuccessRule(ids []int) ([]int, error) {
+	var buf []*Node
+	var i int
+	buf = append(buf, node)
+	for {
+		if i < len(buf) {
+			if buf[i].Leaf {
+				if buf[i].isSuccessNode() {
+					// 找到了导致true的叶子节点
+					ruleID, err := strconv.Atoi(buf[i].Expr)
+					if err != nil {
+						return nil, err
+					}
+					ids = append(ids, ruleID)
+				}
+			}
+			if buf[i].Children != nil {
+				buf = append(buf, buf[i].Children...)
+			}
+			i++
+		} else {
+			break
+		}
+	}
+	return ids, nil
 }
 
 func (node *Node) isFailNode() bool {
 	return node.Blamed && node.Computed && node.Should != node.Val
+}
+
+func (node *Node) isSuccessNode() bool {
+	return node.Computed && node.Should == node.Val
 }
 
 func propagateTree(head *Node) {

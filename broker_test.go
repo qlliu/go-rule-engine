@@ -189,3 +189,43 @@ func TestGetRuleIDsByLogicExpression(t *testing.T) {
 	t.Log(ids)
 	assert.Equal(t, []int{1, 2, 4, 5}, ids)
 }
+
+func TestRules_Fit8(t *testing.T) {
+	jsonRules := []byte(`[
+	{"op": "=", "key": "A", "val": 3, "id": 1, "msg": "A fail"},
+	{"op": ">", "key": "B", "val": 1, "id": 2, "msg": "B fail"},
+	{"op": "<", "key": "C", "val": 5, "id": 3, "msg": "C fail"}
+	]`)
+	logic := ""
+	rs, err := NewRulesWithJSONAndLogic(jsonRules, logic)
+	if err != nil {
+		t.Error(err)
+	}
+	type Obj struct {
+		A int
+		B int
+		C int
+	}
+	o := &Obj{
+		A: 3,
+		B: 3,
+		C: 3,
+	}
+	fit, msg := rs.Fit(o)
+	assert.True(t, fit)
+	assert.Equal(t, 3, len(msg))
+
+	logic = "1 or 2 or 3 or (2and3)"
+	o = &Obj{
+		A: 3,
+		B: 1,
+		C: 7,
+	}
+	rs, err = NewRulesWithJSONAndLogic(jsonRules, logic)
+	if err != nil {
+		t.Error(err)
+	}
+	fit, msg = rs.Fit(o)
+	assert.True(t, fit)
+	assert.Equal(t, "A fail", msg[1])
+}

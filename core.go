@@ -123,6 +123,7 @@ func (rs *Rules) fitWithMapInFact(o map[string]interface{}) (bool, map[int]strin
 	var tips = make(map[int]string)
 	var values = make(map[int]interface{})
 	var hasLogic = false
+	var allRuleIDs []int
 	if rs.Logic != EmptyStr {
 		hasLogic = true
 	}
@@ -143,35 +144,37 @@ func (rs *Rules) fitWithMapInFact(o map[string]interface{}) (bool, map[int]strin
 			// fit false, record msg, for no logic expression usage
 			tips[rule.ID] = rule.Msg
 		}
+		allRuleIDs = append(allRuleIDs, rule.ID)
 	}
 	// compute result by considering logic
+
 	if !hasLogic {
 		for _, flag := range results {
 			if !flag {
 				return false, tips, values
 			}
 		}
-		return true, nil, values
+		return true, rs.getTipsByRuleIDs(allRuleIDs), values
 	}
-	answer, unfitRuleIDs, err := rs.calculateExpressionByTree(results)
+	answer, ruleIDs, err := rs.calculateExpressionByTree(results)
 	// tree can return fail reasons in fact
-	tips = rs.getFailTipsByRuleIDs(unfitRuleIDs)
+	tips = rs.getTipsByRuleIDs(ruleIDs)
 	if err != nil {
 		return false, nil, values
 	}
 	return answer, tips, values
 }
 
-func (rs *Rules) getFailTipsByRuleIDs(unfitIDs []int) map[int]string {
-	var failTips = make(map[int]string)
+func (rs *Rules) getTipsByRuleIDs(ids []int) map[int]string {
+	var tips = make(map[int]string)
 	var allTips = make(map[int]string)
 	for _, rule := range rs.Rules {
 		allTips[rule.ID] = rule.Msg
 	}
-	for _, id := range unfitIDs {
-		failTips[id] = allTips[id]
+	for _, id := range ids {
+		tips[id] = allTips[id]
 	}
-	return failTips
+	return tips
 }
 
 func (r *Rule) fit(v interface{}) bool {
