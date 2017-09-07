@@ -45,7 +45,7 @@ go-rule-engine是用Golang实现的小型规则引擎，可以使用json串构�
 ```go
 	// result
 	true    // fit
-	map[]   // msg
+	map[1:Grade not match 2:not male 4:Physic not so well]   // 注意：当fit=true，msg是命中的ruleIds
 ```
 
 ```go
@@ -114,13 +114,17 @@ t.Log(fit)
 false
 ```
 
-##### 不匹配原因msg
+##### 原因msg
 
 ```go
 fit, msg := ruleToFit.Fit(Chris)
+t.Log(fit)
 t.Log(msg)
 
-map[1:Grade not match]   // 键1是导致fit为false的那个rule的ID，值是那个rule的msg字段，用于提示
+false
+// fit=false, 键1是导致fit为false的那个rule的ID，值是那个rule的msg字段，用于提示
+map[1:Grade not match]
+// 注意：若fit=true, msg则是参与导致fit为true的那些rule的IDs，这是为了表达反向逻辑的规则中的原因
 ```
 
 
