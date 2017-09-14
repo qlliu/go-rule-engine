@@ -235,7 +235,7 @@ func TestRules_Fit9(t *testing.T) {
 	{"op": "<<", "key": "A", "val": "(2.99,3]", "id": 1, "msg": "A"},
 	{"op": "between", "key": "B", "val": "(1,  3.1)", "id": 2, "msg": "B"},
 	{"op": "<<", "key": "C", "val": "[, 6]", "id": 3, "msg": "C"},
-	{"op": "between", "key": "D", "val": "(1,]", "id": 4, "msg": "D"}
+	{"op": "between", "key": "D", "val": "(-11,-2]", "id": 4, "msg": "D"}
 	]`)
 	type Obj struct {
 		A int
@@ -248,7 +248,7 @@ func TestRules_Fit9(t *testing.T) {
 		A: 3,
 		B: 3,
 		C: 3,
-		D: 3,
+		D: -3,
 	}
 	rs, err := NewRulesWithJSONAndLogic(jsonRules, logic)
 	if err != nil {

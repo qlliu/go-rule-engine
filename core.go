@@ -522,28 +522,28 @@ func isBetween(obj float64, scope string) bool {
 	scope = strings.Trim(scope, " ")
 	var equalLeft, equalRight bool
 	// [] 双闭区间
-	result := regexp.MustCompile("^\\[ *(\\d*.?\\d*) *, *(\\d*.?\\d*) *]$").FindStringSubmatch(scope)
+	result := regexp.MustCompile("^\\[ *(-?\\d*.?\\d*) *, *(-?\\d*.?\\d*) *]$").FindStringSubmatch(scope)
 	if len(result) > 2 {
 		equalLeft = true
 		equalRight = true
 		return calculateBetween(obj, result, equalLeft, equalRight)
 	}
 	// [) 左闭右开区间
-	result = regexp.MustCompile("^\\[ *(\\d*.?\\d*) *, *(\\d*.?\\d*) *\\)$").FindStringSubmatch(scope)
+	result = regexp.MustCompile("^\\[ *(-?\\d*.?\\d*) *, *(-?\\d*.?\\d*) *\\)$").FindStringSubmatch(scope)
 	if len(result) > 2 {
 		equalLeft = true
 		equalRight = false
 		return calculateBetween(obj, result, equalLeft, equalRight)
 	}
 	// (] 左开右闭区间
-	result = regexp.MustCompile("^\\( *(\\d*.?\\d*) *, *(\\d*.?\\d*) *]$").FindStringSubmatch(scope)
+	result = regexp.MustCompile("^\\( *(-?\\d*.?\\d*) *, *(-?\\d*.?\\d*) *]$").FindStringSubmatch(scope)
 	if len(result) > 2 {
 		equalLeft = false
 		equalRight = true
 		return calculateBetween(obj, result, equalLeft, equalRight)
 	}
 	// () 双开区间
-	result = regexp.MustCompile("^\\( *(\\d*.?\\d*) *, *(\\d*.?\\d*) *\\)$").FindStringSubmatch(scope)
+	result = regexp.MustCompile("^\\( *(-?\\d*.?\\d*) *, *(-?\\d*.?\\d*) *\\)$").FindStringSubmatch(scope)
 	if len(result) > 2 {
 		equalLeft = false
 		equalRight = false
