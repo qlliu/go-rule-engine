@@ -208,7 +208,7 @@ func (r *Rule) fit(v interface{}) bool {
 
 	var flagOpIn bool
 	// if in || nin
-	if op == "@" || op == "in" || op == "!@" || op == "nin" {
+	if op == "@" || op == "in" || op == "!@" || op == "nin" || op == "<<" || op == "between" {
 		flagOpIn = true
 		if !isObjStr && isRuleStr {
 			pairStr[0] = strconv.FormatFloat(pairNum[0], 'f', -1, 64)
@@ -279,6 +279,8 @@ func (r *Rule) fit(v interface{}) bool {
 		return v == nil
 	case "1", "nempty":
 		return v != nil
+	case "<<", "between":
+		return isBetween(pairNum[0], pairStr[1])
 	default:
 		return false
 	}
@@ -514,4 +516,78 @@ func isIn(needle, haystack string, isNeedleNum bool) bool {
 		}
 	}
 	return false
+}
+
+func isBetween(obj float64, scope string) bool {
+	scope = strings.Trim(scope, " ")
+	var equalLeft, equalRight bool
+	// [] 双闭区间
+	result := regexp.MustCompile("^\\[ *(-?\\d*.?\\d*) *, *(-?\\d*.?\\d*) *]$").FindStringSubmatch(scope)
+	if len(result) > 2 {
+		equalLeft = true
+		equalRight = true
+		return calculateBetween(obj, result, equalLeft, equalRight)
+	}
+	// [) 左闭右开区间
+	result = regexp.MustCompile("^\\[ *(-?\\d*.?\\d*) *, *(-?\\d*.?\\d*) *\\)$").FindStringSubmatch(scope)
+	if len(result) > 2 {
+		equalLeft = true
+		equalRight = false
+		return calculateBetween(obj, result, equalLeft, equalRight)
+	}
+	// (] 左开右闭区间
+	result = regexp.MustCompile("^\\( *(-?\\d*.?\\d*) *, *(-?\\d*.?\\d*) *]$").FindStringSubmatch(scope)
+	if len(result) > 2 {
+		equalLeft = false
+		equalRight = true
+		return calculateBetween(obj, result, equalLeft, equalRight)
+	}
+	// () 双开区间
+	result = regexp.MustCompile("^\\( *(-?\\d*.?\\d*) *, *(-?\\d*.?\\d*) *\\)$").FindStringSubmatch(scope)
+	if len(result) > 2 {
+		equalLeft = false
+		equalRight = false
+		return calculateBetween(obj, result, equalLeft, equalRight)
+	}
+	return false
+}
+
+func calculateBetween(obj float64, result []string, equalLeft, equalRight bool) bool {
+	var hasLeft, hasRight bool
+	var left, right float64
+	var err error
+	if result[1] != "" {
+		hasLeft = true
+		left, err = strconv.ParseFloat(result[1], 64)
+		if err != nil {
+			return false
+		}
+	}
+	if result[2] != "" {
+		hasRight = true
+		right, err = strconv.ParseFloat(result[2], 64)
+		if err != nil {
+			return false
+		}
+	}
+	// calculate
+	if !hasLeft && !hasRight {
+		return false
+	}
+	flag := true
+	if hasLeft {
+		if equalLeft {
+			flag = flag && obj >= left
+		} else {
+			flag = flag && obj > left
+		}
+	}
+	if hasRight {
+		if equalRight {
+			flag = flag && obj <= right
+		} else {
+			flag = flag && obj < right
+		}
+	}
+	return flag
 }
