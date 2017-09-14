@@ -229,3 +229,35 @@ func TestRules_Fit8(t *testing.T) {
 	assert.True(t, fit)
 	assert.Equal(t, "A fail", msg[1])
 }
+
+func TestRules_Fit9(t *testing.T) {
+	jsonRules := []byte(`[
+	{"op": "<<", "key": "A", "val": "(2.99,3]", "id": 1, "msg": "A"},
+	{"op": "between", "key": "B", "val": "(1,  3.1)", "id": 2, "msg": "B"},
+	{"op": "<<", "key": "C", "val": "[, 6]", "id": 3, "msg": "C"},
+	{"op": "between", "key": "D", "val": "(1,]", "id": 4, "msg": "D"}
+	]`)
+	type Obj struct {
+		A int
+		B int
+		C int
+		D int
+	}
+	logic := "1 and 2 and 3 and 4"
+	o := &Obj{
+		A: 3,
+		B: 3,
+		C: 3,
+		D: 3,
+	}
+	rs, err := NewRulesWithJSONAndLogic(jsonRules, logic)
+	if err != nil {
+		t.Error(err)
+	}
+	fit, msg := rs.Fit(o)
+	t.Log(fit)
+	t.Log(msg)
+	assert.True(t, fit)
+	mapExpected := map[int]string{1:"A", 2:"B", 3:"C", 4:"D"}
+	assert.Equal(t, mapExpected, msg)
+}
