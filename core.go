@@ -281,6 +281,8 @@ func (r *Rule) fit(v interface{}) bool {
 		return v != nil
 	case "<<", "between":
 		return isBetween(pairNum[0], pairStr[1])
+	case "@@", "intersect":
+		return isIntersect(pairStr[1], pairStr[0])
 	default:
 		return false
 	}
@@ -513,6 +515,22 @@ func isIn(needle, haystack string, isNeedleNum bool) bool {
 			}
 		} else if needle == trimO {
 			return true
+		}
+	}
+	return false
+}
+
+func isIntersect(objStr string, ruleStr string) bool {
+	// compatible to "1, 2, 3" and "1,2,3"
+	vl := strings.Split(objStr, ",")
+	li := strings.Split(ruleStr, ",")
+	for _, o := range li {
+		trimO := strings.Trim(o, " ")
+		for _, v := range vl {
+			trimV := strings.Trim(v, " ")
+			if trimV == trimO {
+				return true
+			}
 		}
 	}
 	return false

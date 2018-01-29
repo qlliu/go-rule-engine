@@ -37,6 +37,16 @@ func TestRule_Fit(t *testing.T) {
 	assert.True(t, result)
 }
 
+func TestRule_Fit1(t *testing.T) {
+	rule := &Rule{
+		Op:  "@@",
+		Key: "status",
+		Val: "bn,gh,kl",
+	}
+	result := rule.fit("as,df,gh")
+	assert.True(t, result)
+}
+
 func TestRules_Fit(t *testing.T) {
 	jsonStr := []byte(`[
 	{"op": "@", "key": "status", "val": "abcd", "id": 13, "msg": "状态不对"},
