@@ -123,3 +123,13 @@ func GetRuleIDsByLogicExpression(logic string) ([]int, error) {
 	}
 	return result, nil
 }
+
+// Fit RulesSet's fit, means hitting first time in array
+func (rst *RulesSet) Fit(o interface{}) *Rules {
+	for _, rs := range rst.RulesSet {
+		if flag, _ := rs.Fit(o); flag {
+			return rs
+		}
+	}
+	return nil
+}

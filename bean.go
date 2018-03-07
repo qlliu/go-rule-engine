@@ -11,10 +11,11 @@ type Rule struct {
 
 // Rules 规则，拥有逻辑表达式
 type Rules struct {
-	Rules []*Rule // 子规则集合
-	Logic string  // 逻辑表达式，使用子规则ID运算表达
-	Name  string  // 规则名称
-	Msg   string  // 规则抛出的负提示
+	Rules []*Rule     // 子规则集合
+	Logic string      // 逻辑表达式，使用子规则ID运算表达
+	Name  string      // 规则名称
+	Msg   string      // 规则抛出的负提示
+	Val   interface{} // 改规则所代表的存值
 }
 
 // RulesSet 规则集合
