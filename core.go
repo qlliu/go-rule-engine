@@ -98,15 +98,15 @@ func newRulesWithArray(rules []*Rule) *Rules {
 }
 
 // FitSet RulesSet匹配结构体
-func (rss *RulesSet) FitSet(o interface{}) []string {
+func (rst *RulesSet) FitSet(o interface{}) []string {
 	m := structs.Map(o)
-	return rss.FitSetWithMap(m)
+	return rst.FitSetWithMap(m)
 }
 
 // FitSetWithMap RulesSet匹配Map
-func (rss *RulesSet) FitSetWithMap(o map[string]interface{}) []string {
+func (rst *RulesSet) FitSetWithMap(o map[string]interface{}) []string {
 	result := make([]string, 0)
-	for _, rules := range rss.RulesSet {
+	for _, rules := range rst.RulesSet {
 		if fit, _ := rules.FitWithMap(o); fit {
 			// hit this rules
 			result = append(result, rules.Name)
