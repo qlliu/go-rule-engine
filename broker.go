@@ -66,10 +66,22 @@ func (rs *Rules) Fit(o interface{}) (bool, map[int]string) {
 	return rs.FitWithMap(m)
 }
 
+// Fit 匹配, 返回true/false, 如果为false的一些提示
+func (m *Molecule) Fit(o interface{}) (bool, map[int]string) {
+	rs := (*Rules)(m)
+	return rs.Fit(o)
+}
+
 // FitWithMap Rules匹配map
 func (rs *Rules) FitWithMap(o map[string]interface{}) (bool, map[int]string) {
 	fit, tips, _ := rs.fitWithMapInFact(o)
 	return fit, tips
+}
+
+// FitWithMap Rules匹配map, 返回true/false, 如果为false的一些提示
+func (m *Molecule) FitWithMap(o map[string]interface{}) (bool, map[int]string) {
+	rs := (*Rules)(m)
+	return rs.FitWithMap(o)
 }
 
 // FitAskVal Rules匹配结构体，同时返回所有子规则key值
@@ -129,6 +141,16 @@ func (rst *RulesSet) Fit(o interface{}) *Rules {
 	for _, rs := range rst.RulesSet {
 		if flag, _ := rs.Fit(o); flag {
 			return rs
+		}
+	}
+	return nil
+}
+
+// Fit Compound's fit, means hitting first time in array
+func (c *Compound) Fit(o interface{}) *Molecule {
+	for _, rs := range c.RulesSet {
+		if flag, _ := rs.Fit(o); flag {
+			return (*Molecule)(rs)
 		}
 	}
 	return nil

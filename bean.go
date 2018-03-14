@@ -2,12 +2,15 @@ package ruler
 
 // Rule 最小单元，子规则
 type Rule struct {
-	Op  string      `json:"op"`  // 预算符
+	Op  string      `json:"op"`  // 算符
 	Key string      `json:"key"` // 目标变量键名
 	Val interface{} `json:"val"` // 目标变量子规则存值
 	ID  int         `json:"id"`  // 子规则ID
 	Msg string      `json:"msg"` // 该规则抛出的负提示
 }
+
+// Atom 原子-子规则
+type Atom Rule
 
 // Rules 规则，拥有逻辑表达式
 type Rules struct {
@@ -18,12 +21,18 @@ type Rules struct {
 	Val   interface{} // 改规则所代表的存值
 }
 
-// RulesSet 规则集合
+// Molecule 分子-规则
+type Molecule Rules
+
+// RulesSet 规则堆
 type RulesSet struct {
 	RulesSet []*Rules
 	Name     string
 	Msg      string
 }
+
+// Compound 化合物-规则堆
+type Compound RulesSet
 
 // ValidOperators 有效
 var ValidOperators = []string{"and", "or", "not"}
