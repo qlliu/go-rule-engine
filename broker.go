@@ -138,8 +138,14 @@ func GetRuleIDsByLogicExpression(logic string) ([]int, error) {
 
 // Fit RulesSet's fit, means hitting first time in array
 func (rst *RulesSet) Fit(o interface{}) *Rules {
+	m := structs.Map(o)
+	return rst.FitWithMap(m)
+}
+
+// FitWithMap RulesSet's fit, means hitting first time in array
+func (rst *RulesSet) FitWithMap(o map[string]interface{}) *Rules {
 	for _, rs := range rst.RulesSet {
-		if flag, _ := rs.Fit(o); flag {
+		if flag, _ := rs.FitWithMap(o); flag {
 			return rs
 		}
 	}
@@ -148,8 +154,14 @@ func (rst *RulesSet) Fit(o interface{}) *Rules {
 
 // Fit Compound's fit, means hitting first time in array
 func (c *Compound) Fit(o interface{}) *Molecule {
+	m := structs.Map(o)
+	return c.FitWithMap(m)
+}
+
+// FitWithMap Compound's fit, means hitting first time in array
+func (c *Compound) FitWithMap(o map[string]interface{}) *Molecule {
 	for _, rs := range c.RulesSet {
-		if flag, _ := rs.Fit(o); flag {
+		if flag, _ := rs.FitWithMap(o); flag {
 			return (*Molecule)(rs)
 		}
 	}
