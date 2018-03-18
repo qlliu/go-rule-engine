@@ -8,3 +8,6 @@ const Space = " "
 
 // EmptyStr 空串
 const EmptyStr = ""
+
+// EmptyFloat64 空数字
+const EmptyFloat64 = 0
