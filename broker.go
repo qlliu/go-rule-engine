@@ -167,3 +167,21 @@ func (c *Compound) FitWithMap(o map[string]interface{}) *Molecule {
 	}
 	return nil
 }
+
+// FitGetStr Compound return string
+func (c *Compound) FitGetStr(o interface{}) string {
+	m := c.Fit(o)
+	if str, ok := m.Val.(string); ok {
+		return str
+	}
+	return EmptyStr
+}
+
+// FitGetStr Compound return string
+func (c *Compound) FitGetNum(o interface{}) float64 {
+	m := c.Fit(o)
+	if num, ok := m.Val.(float64); ok {
+		return num
+	}
+	return EmptyFloat64
+}
