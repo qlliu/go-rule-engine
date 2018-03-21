@@ -1,7 +1,6 @@
 package ruler
 
 import (
-	"errors"
 	"regexp"
 	"strconv"
 	"strings"
@@ -98,21 +97,12 @@ func (rs *Rules) FitWithMapAskVal(o map[string]interface{}) (bool, map[int]strin
 // GetRuleIDsByLogicExpression 根据逻辑表达式得到规则id列表
 func GetRuleIDsByLogicExpression(logic string) ([]int, error) {
 	var result []int
-	formatLogic := formatLogicExpression(logic)
-	if formatLogic == Space || formatLogic == EmptyStr {
-		return nil, nil
+	formatLogic, errLogic := validLogic(logic)
+	if errLogic != nil {
+		return nil, errLogic
 	}
-	// validate the formatLogic string
-	// 1. only contain legal symbol
-	isValidSymbol := isFormatLogicExpressionAllValidSymbol(formatLogic)
-	if !isValidSymbol {
-		return nil, errors.New("invalid logic expression: invalid symbol")
-	}
-
-	// 2. check logic expression by trying to  calculate result with random bool
-	err := tryToCalculateResultByFormatLogicExpressionWithRandomProbe(formatLogic)
-	if err != nil {
-		return nil, errors.New("invalid logic expression: can not calculate")
+	if formatLogic == EmptyStr {
+		return result, nil
 	}
 
 	// return rule id list
