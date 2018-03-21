@@ -34,7 +34,7 @@ type RulesSet struct {
 // Compound 化合物-规则堆
 type Compound RulesSet
 
-// ValidOperators 有效
+// ValidOperators 有效逻辑运算符
 var ValidOperators = []string{"and", "or", "not"}
 
 // Node 树节点
@@ -59,3 +59,6 @@ const (
 	// OperatorNot not
 	OperatorNot operator = "not"
 )
+
+// ValidAtomOperatorsDisplay 有效子规则运算符-展示
+var ValidAtomOperatorsDisplay = []string{"=", ">", "<", ">=", "<=", "!=", "in", "nin", "regex", "empty", "nempty", "between", "intersect"}
