@@ -14,25 +14,36 @@ import (
 	"github.com/fatih/structs"
 )
 
-func injectLogic(rules *Rules, logic string) (*Rules, error) {
+func validLogic(logic string) (string, error) {
 	formatLogic := formatLogicExpression(logic)
 	if formatLogic == Space || formatLogic == EmptyStr {
-		return rules, nil
+		return EmptyStr, nil
 	}
 	// validate the formatLogic string
 	// 1. only contain legal symbol
 	isValidSymbol := isFormatLogicExpressionAllValidSymbol(formatLogic)
 	if !isValidSymbol {
-		return nil, errors.New("invalid logic expression: invalid symbol")
+		return EmptyStr, errors.New("invalid logic expression: invalid symbol")
 	}
 
 	// 2. check logic expression by trying to  calculate result with random bool
 	err := tryToCalculateResultByFormatLogicExpressionWithRandomProbe(formatLogic)
 	if err != nil {
-		return nil, errors.New("invalid logic expression: can not calculate")
+		return EmptyStr, errors.New("invalid logic expression: can not calculate")
+	}
+	return formatLogic, nil
+}
+
+func injectLogic(rules *Rules, logic string) (*Rules, error) {
+	formatLogic, err := validLogic(logic)
+	if err != nil {
+		return nil, err
+	}
+	if formatLogic == EmptyStr {
+		return rules, nil
 	}
 
-	// 3. all ids in logic string must be in rules ids
+	// all ids in logic string must be in rules ids
 	isValidIds := isFormatLogicExpressionAllIdsExist(formatLogic, rules)
 	if !isValidIds {
 		return nil, errors.New("invalid logic expression: invalid id")

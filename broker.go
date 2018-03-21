@@ -185,3 +185,8 @@ func (c *Compound) FitGetNum(o interface{}) float64 {
 	}
 	return EmptyFloat64
 }
+
+// CheckLogicExpressionAndFormat 检查逻辑表达式正确性，并返回formatted
+func CheckLogicExpressionAndFormat(logic string) (string, error) {
+	return validLogic(logic)
+}

@@ -285,3 +285,12 @@ func TestRules_FitWithMapAskVal(t *testing.T) {
 	assert.True(t, fit)
 	assert.Equal(t, valExpect, val)
 }
+
+func TestValidLogic(t *testing.T) {
+	logic := " 1 and2or(3 or not4)  "
+	formatLogic, err := validLogic(logic)
+	if err != nil {
+		t.Error(err)
+	}
+	assert.Equal(t, "1 and 2 or ( 3 or not 4 )", formatLogic)
+}
