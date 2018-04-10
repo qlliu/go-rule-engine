@@ -158,22 +158,28 @@ func (c *Compound) FitWithMap(o map[string]interface{}) *Molecule {
 	return nil
 }
 
-// FitGetStr Compound return string
-func (c *Compound) FitGetStr(o interface{}) string {
+// FitGetStr Compound return hit, string
+func (c *Compound) FitGetStr(o interface{}) (bool, string) {
 	m := c.Fit(o)
-	if str, ok := m.Val.(string); ok {
-		return str
+	if m == nil {
+		return false, EmptyStr
 	}
-	return EmptyStr
+	if str, ok := m.Val.(string); ok {
+		return true, str
+	}
+	return true, EmptyStr
 }
 
-// FitGetStr Compound return string
-func (c *Compound) FitGetNum(o interface{}) float64 {
+// FitGetNum Compound return hit, float64
+func (c *Compound) FitGetNum(o interface{}) (bool, float64) {
 	m := c.Fit(o)
-	if num, ok := m.Val.(float64); ok {
-		return num
+	if m == nil {
+		return false, EmptyFloat64
 	}
-	return EmptyFloat64
+	if num, ok := m.Val.(float64); ok {
+		return true, num
+	}
+	return true, EmptyFloat64
 }
 
 // CheckLogicExpressionAndFormat 检查逻辑表达式正确性，并返回formatted
