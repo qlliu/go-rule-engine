@@ -78,11 +78,10 @@ func traverseTreeInLayer(head *Node) {
 
 func traverseTreeInPostOrder(head *Node) {
 	children := head.Children
-	if children != nil {
-		for _, child := range children {
-			traverseTreeInPostOrder(child)
-		}
+	for _, child := range children {
+		traverseTreeInPostOrder(child)
 	}
+
 	if head.Leaf {
 		fmt.Printf("%+v\n", head)
 		return

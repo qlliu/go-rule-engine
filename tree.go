@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"math/rand"
+
 	"github.com/satori/go.uuid"
 )
 
@@ -62,13 +64,15 @@ func logicToTree(logic string) *Node {
   计算树所有节点值的核心方法
 */
 func (node *Node) traverseTreeInPostOrderForCalculate(values map[int]bool) error {
+	if node == nil {
+		return nil
+	}
+
 	children := node.Children
-	if children != nil {
-		for _, child := range children {
-			err := child.traverseTreeInPostOrderForCalculate(values)
-			if err != nil {
-				return err
-			}
+	for _, child := range children {
+		err := child.traverseTreeInPostOrderForCalculate(values)
+		if err != nil {
+			return err
 		}
 	}
 	if node.Leaf {
@@ -310,7 +314,14 @@ func replaceBiggestBracketContentAtOnce(expr string, mapReplace map[string]strin
 	if flag {
 		// delete last )
 		toReplace = toReplace[:len(toReplace)-1]
-		key := uuid.NewV1().String()
+		var key string
+		if u, err := uuid.NewV1(); err != nil {
+			// uuid error, just give me something random
+			key = strconv.FormatFloat(rand.Float64(), 'f', -1, 64)
+		} else {
+			key = u.String()
+		}
+
 		result = strings.Replace(result, "("+string(toReplace)+")", key, 1)
 		mapReplace[key] = strings.Trim(string(toReplace), " ")
 	}
