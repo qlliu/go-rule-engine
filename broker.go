@@ -65,22 +65,10 @@ func (rs *Rules) Fit(o interface{}) (bool, map[int]string) {
 	return rs.FitWithMap(m)
 }
 
-// Fit 匹配, 返回true/false, 如果为false的一些提示
-func (m *Molecule) Fit(o interface{}) (bool, map[int]string) {
-	rs := (*Rules)(m)
-	return rs.Fit(o)
-}
-
 // FitWithMap Rules匹配map
 func (rs *Rules) FitWithMap(o map[string]interface{}) (bool, map[int]string) {
 	fit, tips, _ := rs.fitWithMapInFact(o)
 	return fit, tips
-}
-
-// FitWithMap Rules匹配map, 返回true/false, 如果为false的一些提示
-func (m *Molecule) FitWithMap(o map[string]interface{}) (bool, map[int]string) {
-	rs := (*Rules)(m)
-	return rs.FitWithMap(o)
 }
 
 // FitAskVal Rules匹配结构体，同时返回所有子规则key值
@@ -126,15 +114,32 @@ func GetRuleIDsByLogicExpression(logic string) ([]int, error) {
 	return result, nil
 }
 
-// Fit RulesSet's fit, means hitting first time in array
-func (rst *RulesSet) Fit(o interface{}) *Rules {
+// NewRulesList RulesList的构造方法，["name": "规则集的名称", "msg": "规则集的简述"]
+func NewRulesList(listRules []*Rules, extractInfo map[string]string) *RulesList {
+	// check if every rules has name, if not give a index as name
+	for index, rules := range listRules {
+		if rules.Name == EmptyStr {
+			rules.Name = strconv.Itoa(index + 1)
+		}
+	}
+	name := extractInfo["name"]
+	msg := extractInfo["msg"]
+	return &RulesList{
+		RulesList: listRules,
+		Name:      name,
+		Msg:       msg,
+	}
+}
+
+// Fit RulesList's fit, means hitting first rules in array
+func (rst *RulesList) Fit(o interface{}) *Rules {
 	m := structs.Map(o)
 	return rst.FitWithMap(m)
 }
 
-// FitWithMap RulesSet's fit, means hitting first time in array
-func (rst *RulesSet) FitWithMap(o map[string]interface{}) *Rules {
-	for _, rs := range rst.RulesSet {
+// FitWithMap RulesList's fit, means hitting first rules in array
+func (rst *RulesList) FitWithMap(o map[string]interface{}) *Rules {
+	for _, rs := range rst.RulesList {
 		if flag, _ := rs.FitWithMap(o); flag {
 			return rs
 		}
@@ -142,41 +147,25 @@ func (rst *RulesSet) FitWithMap(o map[string]interface{}) *Rules {
 	return nil
 }
 
-// Fit Compound's fit, means hitting first time in array
-func (c *Compound) Fit(o interface{}) *Molecule {
-	m := structs.Map(o)
-	return c.FitWithMap(m)
-}
-
-// FitWithMap Compound's fit, means hitting first time in array
-func (c *Compound) FitWithMap(o map[string]interface{}) *Molecule {
-	for _, rs := range c.RulesSet {
-		if flag, _ := rs.FitWithMap(o); flag {
-			return (*Molecule)(rs)
-		}
-	}
-	return nil
-}
-
-// FitGetStr Compound return hit, string
-func (c *Compound) FitGetStr(o interface{}) (bool, string) {
-	m := c.Fit(o)
-	if m == nil {
+// FitGetStr return hit rules value, string
+func (rst *RulesList) FitGetStr(o interface{}) (bool, string) {
+	rs := rst.Fit(o)
+	if rs == nil {
 		return false, EmptyStr
 	}
-	if str, ok := m.Val.(string); ok {
+	if str, ok := rs.Val.(string); ok {
 		return true, str
 	}
 	return true, EmptyStr
 }
 
-// FitGetNum Compound return hit, float64
-func (c *Compound) FitGetNum(o interface{}) (bool, float64) {
-	m := c.Fit(o)
-	if m == nil {
+// FitGetNum return hit value, float64
+func (rst *RulesList) FitGetNum(o interface{}) (bool, float64) {
+	rs := rst.Fit(o)
+	if rs == nil {
 		return false, EmptyFloat64
 	}
-	if num, ok := m.Val.(float64); ok {
+	if num, ok := rs.Val.(float64); ok {
 		return true, num
 	}
 	return true, EmptyFloat64

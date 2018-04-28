@@ -10,8 +10,6 @@ import (
 	"strings"
 
 	"math"
-
-	"github.com/fatih/structs"
 )
 
 func validLogic(logic string) (string, error) {
@@ -63,23 +61,6 @@ func injectExtractInfo(rules *Rules, extractInfo map[string]string) *Rules {
 	return rules
 }
 
-// NewRulesSet RulesSet的构造方法，["name": "规则集的名称", "msg": "规则集的简述"]
-func NewRulesSet(listRules []*Rules, extractInfo map[string]string) *RulesSet {
-	// check if every rules has name, if not give a index as name
-	for index, rules := range listRules {
-		if rules.Name == EmptyStr {
-			rules.Name = strconv.Itoa(index + 1)
-		}
-	}
-	name := extractInfo["name"]
-	msg := extractInfo["msg"]
-	return &RulesSet{
-		RulesSet: listRules,
-		Name:     name,
-		Msg:      msg,
-	}
-}
-
 func newRulesWithJSON(jsonStr []byte) (*Rules, error) {
 	var rules []*Rule
 	err := json.Unmarshal(jsonStr, &rules)
@@ -106,27 +87,6 @@ func newRulesWithArray(rules []*Rule) *Rules {
 	return &Rules{
 		Rules: rules,
 	}
-}
-
-// FitSet RulesSet匹配结构体
-func (rst *RulesSet) FitSet(o interface{}) []string {
-	m := structs.Map(o)
-	return rst.FitSetWithMap(m)
-}
-
-// FitSetWithMap RulesSet匹配Map
-func (rst *RulesSet) FitSetWithMap(o map[string]interface{}) []string {
-	result := make([]string, 0)
-	for _, rules := range rst.RulesSet {
-		if fit, _ := rules.FitWithMap(o); fit {
-			// hit this rules
-			result = append(result, rules.Name)
-		}
-	}
-	if len(result) == 0 {
-		return nil
-	}
-	return result
 }
 
 func (rs *Rules) fitWithMapInFact(o map[string]interface{}) (bool, map[int]string, map[int]interface{}) {

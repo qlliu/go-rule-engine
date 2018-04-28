@@ -214,8 +214,8 @@ func TestNewRulesSet(t *testing.T) {
 		t.Error(err)
 	}
 
-	rulesSet := NewRulesSet([]*Rules{rules}, extractInfo)
-	assert.Equal(t, rulesSet.RulesSet[0].Name, "1")
+	rulesSet := NewRulesList([]*Rules{rules}, extractInfo)
+	assert.Equal(t, rulesSet.RulesList[0].Name, "1")
 }
 
 func TestRulesSet_FitSetWithMap(t *testing.T) {
@@ -234,13 +234,13 @@ func TestRulesSet_FitSetWithMap(t *testing.T) {
 		t.Error(err)
 	}
 
-	rulesSet := NewRulesSet([]*Rules{rules}, extractInfo)
+	rulesSet := NewRulesList([]*Rules{rules}, extractInfo)
 
 	obj := map[string]interface{}{"Name": "peter", "Status": "abcd", "Key": 0}
 	fitRules, _ := rules.FitWithMap(obj)
 	assert.False(t, fitRules)
 
-	result := rulesSet.FitSetWithMap(obj)
+	result := rulesSet.FitWithMap(obj)
 	assert.Nil(t, result)
 }
 

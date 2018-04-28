@@ -9,9 +9,6 @@ type Rule struct {
 	Msg string      `json:"msg"` // 该规则抛出的负提示
 }
 
-// Atom 原子-子规则
-type Atom Rule
-
 // Rules 规则，拥有逻辑表达式
 type Rules struct {
 	Rules []*Rule     // 子规则集合
@@ -21,18 +18,12 @@ type Rules struct {
 	Val   interface{} // 改规则所代表的存值
 }
 
-// Molecule 分子-规则
-type Molecule Rules
-
-// RulesSet 规则堆
-type RulesSet struct {
-	RulesSet []*Rules
-	Name     string
-	Msg      string
+// RulesList 规则组，顺序即优先级
+type RulesList struct {
+	RulesList []*Rules
+	Name      string
+	Msg       string
 }
-
-// Compound 化合物-规则堆
-type Compound RulesSet
 
 // ValidOperators 有效逻辑运算符
 var ValidOperators = []string{"and", "or", "not"}
