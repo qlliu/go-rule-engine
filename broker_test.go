@@ -262,7 +262,7 @@ func TestRules_Fit9(t *testing.T) {
 	assert.Equal(t, mapExpected, msg)
 }
 
-func TestRulesSet_Fit(t *testing.T) {
+func TestRulesList_Fit(t *testing.T) {
 	jsonRules := []byte(`[
 	{"op": "<<", "key": "A", "val": "(2.99,3]", "id": 1, "msg": "A"},
 	{"op": "between", "key": "B", "val": "(1,  3.1)", "id": 2, "msg": "B"},
@@ -287,8 +287,8 @@ func TestRulesSet_Fit(t *testing.T) {
 		t.Error(err)
 	}
 
-	rst := &RulesSet{
-		RulesSet: []*Rules{rs},
+	rst := &RulesList{
+		RulesList: []*Rules{rs},
 	}
 	result := rst.Fit(o)
 	assert.NotNil(t, result)
