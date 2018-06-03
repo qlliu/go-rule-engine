@@ -159,16 +159,49 @@ func (rst *RulesList) FitGetStr(o interface{}) (bool, string) {
 	return true, EmptyStr
 }
 
-// FitGetNum return hit value, float64
-func (rst *RulesList) FitGetNum(o interface{}) (bool, float64) {
+// FitGetFloat64 return hit value, float64
+func (rst *RulesList) FitGetFloat64(o interface{}) (bool, float64) {
 	rs := rst.Fit(o)
 	if rs == nil {
 		return false, EmptyFloat64
 	}
-	if num, ok := rs.Val.(float64); ok {
-		return true, num
+	return true, formatNumber(rs.Val)
+}
+
+// FitGetInt64 return hit value, int64
+func (rst *RulesList) FitGetInt64(o interface{}) (bool, int64) {
+	rs := rst.Fit(o)
+	if rs == nil {
+		return false, EmptyFloat64
 	}
-	return true, EmptyFloat64
+	var result int64
+	switch t := rs.Val.(type) {
+	case uint:
+		result = int64(t)
+	case uint8:
+		result = int64(t)
+	case uint16:
+		result = int64(t)
+	case uint32:
+		result = int64(t)
+	case uint64:
+		result = int64(t)
+	case int:
+		result = int64(t)
+	case int8:
+		result = int64(t)
+	case int16:
+		result = int64(t)
+	case int32:
+		result = int64(t)
+	case int64:
+		result = t
+	case float32:
+		result = int64(t + 1e-5)
+	case float64:
+		result = int64(t + 1e-5)
+	}
+	return true, result
 }
 
 // CheckLogicExpressionAndFormat 检查逻辑表达式正确性，并返回formatted
