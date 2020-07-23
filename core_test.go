@@ -37,6 +37,28 @@ func TestRule_Fit(t *testing.T) {
 	assert.True(t, result)
 }
 
+func TestRule_FitBool(t *testing.T) {
+	rule := &Rule{
+		Op:  "=",
+		Key: "status",
+		Val: true,
+	}
+	result := rule.fit(true)
+	assert.True(t, result)
+	result = rule.fit(false)
+	assert.False(t, result)
+	
+	rule = &Rule{
+		Op:  "=",
+		Key: "status",
+		Val: false,
+	}
+	result = rule.fit(true)
+	assert.False(t, result)
+	result = rule.fit(false)
+	assert.True(t, result)
+}
+
 func TestRule_Fit1(t *testing.T) {
 	rule := &Rule{
 		Op:  "@@",
