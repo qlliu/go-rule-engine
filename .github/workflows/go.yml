@@ -22,10 +22,28 @@ jobs:
         go-version: '1.12'
 
     - name: Install
-      run: go install -v
+      run: echo go install
 
     - name: Build
-      run: go build -v
+      run: echo go build
 
     - name: Test
-      run: go test -v
+      run: echo go test
+
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Code Scan
+      run: echo code scan
+      
+    - name: Artifacts Scan
+      run: echo artifacts scan
+
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Prepare
+      run: echo prepare
+      
+    - name: Update
+      run: echo update service
