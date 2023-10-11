@@ -78,10 +78,3 @@ jobs:
       
     - name: Update
       run: echo update service
-      
-    - name: Approval
-      uses: trstringer/manual-approval@v1
-      with:
-        secret: ${{ github.TOKEN }}
-        approvers: liaokz
-        minimum-approvals: 1
