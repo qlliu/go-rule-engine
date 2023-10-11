@@ -3,6 +3,10 @@
 
 name: Go
 
+concurrency:
+  group: ${{ github.repository }}-concurrency-for-workflow
+  cancel-in-progress: false
+
 on:
   push:
     branches: [ "master" ]
@@ -32,6 +36,7 @@ jobs:
 
   scan:
     runs-on: ubuntu-latest
+    needs: build
     steps:
     - name: Code Scan
       run: echo code scan
@@ -41,6 +46,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
+    needs: scan
     steps:
     - name: Prepare
       run: echo prepare
