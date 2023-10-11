@@ -47,6 +47,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     needs: build
+    outputs:
+      result: success
     steps:
     - name: Unit Test
       run: |
