@@ -58,12 +58,17 @@ jobs:
       with:
         name: test_report
         path: test_result.txt
+    - name: Write to workflow job summary
+      run: |
+        SUMMARY=$'# Testing Job Summary\n## Second Level Heading\nHello GitHub'
+        echo "$SUMMARY" >> $GITHUB_STEP_SUMMARY
 
   deploy:
     runs-on: ubuntu-latest
     needs: [scan, test]
     steps:
     - name: Prepare
+      link: http://github.com
       run: echo prepare
       
     - name: Update
